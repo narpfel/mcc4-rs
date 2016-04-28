@@ -24,7 +24,7 @@ impl PlayerTrait for AiPlayer {
         }).collect();
 
         let (tx, rx) = mpsc::channel();
-        for (column, initial_game) in valid_moves.iter().zip(initial_games.iter()) {
+        for (column, initial_game) in valid_moves.iter().zip(&initial_games) {
             let (column, initial_game, tx) = (column.clone(), initial_game.clone(), tx.clone());
             thread::spawn(move || {
                 let mut score = 0;
