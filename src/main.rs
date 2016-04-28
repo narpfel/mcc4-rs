@@ -18,9 +18,13 @@ fn main() {
     'outer: loop {
         for player in players.iter_mut() {
             let move_ = player.make_move(&mut game);
-            if let Ok(state) = game.play(move_) {
-                println!("Player {} has moved {}", game.other_player(), move_);
-                println!("{}", state);
+            match game.play(move_) {
+                Ok(state) => {
+                    print!("\x1B[2J\x1B[H");
+                    println!("Player {} has moved {}", game.other_player(), move_ + 1);
+                    println!("{}", state);
+                },
+                Err(err) => println!("Invalid input: {:?}", err),
             }
 
             if let Some(winner) = game.winner() {

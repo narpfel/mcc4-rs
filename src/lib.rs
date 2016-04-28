@@ -28,13 +28,8 @@ impl PlayerTrait for HumanPlayer {
             io::stdout().flush().unwrap();
 
             let input = lines.next().expect("Input failed").expect("Input failed");
-            match input.parse() {
-                Ok(position) => {
-                    if game.state().is_valid(position) {
-                        print!("\x1B[2J\x1B[H");
-                        return position;
-                    }
-                },
+            match input.parse::<usize>() {
+                Ok(position) => return position.wrapping_sub(1),
                 Err(_) => {
                     println!("Please enter a number.");
                 }

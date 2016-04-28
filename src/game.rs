@@ -73,10 +73,6 @@ pub trait State : fmt::Display + Clone {
     fn set(&mut self, row: usize, column: usize, player: Player);
     fn get(&self, column: usize, row: usize) -> Player;
 
-    fn is_valid(&self, column: usize) -> bool {
-        self.get(column, 0) == Player(0)
-    }
-
     fn play(&mut self, column_number: usize, player: Player) -> Result<Self, InvalidMove> {
         if let Some(column) = self.column(column_number) {
             match column.iter().rposition(|&Player(p)| p == 0) {
@@ -185,7 +181,7 @@ impl fmt::Display for ArrayState {
             body = rows.join(&fill_row("├", "┼", "┤\n")),
             bottom_row = fill_row("└", "┴", "┘\n")
         ));
-        write!(f, " {}\n", (0..columns).map(|n| format!("{}", n)).collect::<Vec<_>>().join(" "))
+        write!(f, " {}\n", (1..columns + 1).map(|n| format!("{}", n)).collect::<Vec<_>>().join(" "))
     }
 }
 
