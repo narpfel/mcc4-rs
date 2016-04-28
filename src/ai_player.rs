@@ -14,7 +14,7 @@ pub struct AiPlayer;
 
 
 impl PlayerTrait for AiPlayer {
-    fn make_move(&mut self, original_game: &Game) -> usize {
+    fn make_move(&self, original_game: &Game) -> usize {
         let me = original_game.current_player();
         let valid_moves = find_valid_moves(original_game);
         let initial_games: Vec<_> = valid_moves.iter().map(|column| {

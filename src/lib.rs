@@ -11,7 +11,7 @@ pub use game::{Game, State, ArrayState, InvalidMove, Player};
 
 
 pub trait PlayerTrait {
-    fn make_move(&mut self, game: &Game) -> usize;
+    fn make_move(&self, game: &Game) -> usize;
 }
 
 
@@ -19,7 +19,7 @@ pub trait PlayerTrait {
 pub struct HumanPlayer;
 
 impl PlayerTrait for HumanPlayer {
-    fn make_move(&mut self, game: &Game) -> usize {
+    fn make_move(&self, game: &Game) -> usize {
         let stdin = io::stdin();
         let mut lines = stdin.lock().lines();
 

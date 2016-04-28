@@ -8,15 +8,15 @@ use mcc4::{Game, State, AiPlayer, HumanPlayer, PlayerTrait};
 
 fn main() {
     let mut game = Game::new(7, 6);
-    let mut human_player = HumanPlayer;
-    let mut ai_player = AiPlayer;
-    let mut players: Vec<&mut PlayerTrait> = vec![&mut human_player, &mut ai_player];
+    let human_player = HumanPlayer;
+    let ai_player = AiPlayer;
+    let mut players: Vec<&PlayerTrait> = vec![&human_player, &ai_player];
     rand::thread_rng().shuffle(&mut players);
 
     println!("\x1B[2J\x1B[H");
     println!("{}", game.state());
     'outer: loop {
-        for player in players.iter_mut() {
+        for player in &players {
             let move_ = player.make_move(&mut game);
             match game.play(move_) {
                 Ok(state) => {
