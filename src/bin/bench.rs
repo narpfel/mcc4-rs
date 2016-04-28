@@ -1,20 +1,28 @@
+extern crate rand;
+
+extern crate mcc4;
+
+
 use std::collections::HashMap;
 use std::thread;
+use std::time::Instant;
 use std::sync::mpsc;
 
-use rand::{StdRng, Rng};
+use rand::{StdRng, SeedableRng};
 
-use super::*;
+use mcc4::*;
+use mcc4::ai_player::{find_valid_moves, simulate_game};
+
 
 const SIMULATIONS: usize = 100_000;
 
 
 #[derive(Clone, Copy)]
-pub struct AiPlayer;
+pub struct BenchmarkPlayer;
 
 
-impl PlayerTrait for AiPlayer {
-    fn make_move(&self, original_game: &Game) -> usize {
+impl BenchmarkPlayer {
+    fn benchmark(&self, original_game: &Game) -> usize {
         let me = original_game.current_player();
         let valid_moves = find_valid_moves(original_game);
         let initial_games: Vec<_> = valid_moves.iter().map(|column| {
@@ -28,7 +36,7 @@ impl PlayerTrait for AiPlayer {
             let (column, initial_game, tx) = (column.clone(), initial_game.clone(), tx.clone());
             thread::spawn(move || {
                 let mut score = 0;
-                let mut rng = StdRng::new().expect("Could not create random number generator");
+                let mut rng = StdRng::from_seed(&[1, 2, 3, 42]);
                 for _ in 0..SIMULATIONS {
                     let mut game = initial_game.clone();
                     score += match simulate_game(&mut rng, &mut game) {
@@ -51,22 +59,13 @@ impl PlayerTrait for AiPlayer {
 }
 
 
-pub fn simulate_game<R: Rng>(rng: &mut R, game: &mut Game) -> Option<Player> {
-    loop {
-        let valid_moves = find_valid_moves(game);
-        if valid_moves.is_empty() {
-            return game.winner();
-        }
-        game.play(*rng.choose(&valid_moves).unwrap()).unwrap();
-        let winner = game.winner();
-        if winner.is_some() {
-            return winner;
-        }
-    }
-}
-
-
-pub fn find_valid_moves(game: &Game) -> Vec<usize> {
-    let columns = game.size().0;
-    (0..columns).filter(|&column| game.state().column(column).unwrap()[0] == Player(0)).collect()
+fn main() {
+    let game = Game::new(7, 6);
+    let benchmark_player = BenchmarkPlayer;
+    let now = Instant::now();
+    benchmark_player.benchmark(&game);
+    let time = now.elapsed();
+    println!("{:?}", time);
+    let seconds = (time.as_secs() * 1_000_000_000 + time.subsec_nanos() as u64) as f64 / 1_000_000_000.;
+    println!("{:?} games per second", 700_000. / seconds);
 }

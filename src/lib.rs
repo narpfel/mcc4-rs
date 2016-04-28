@@ -3,7 +3,7 @@ extern crate rand;
 use std::io;
 use std::io::prelude::*;
 
-mod ai_player;
+pub mod ai_player;
 mod game;
 
 pub use ai_player::AiPlayer;

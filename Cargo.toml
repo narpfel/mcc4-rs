@@ -3,8 +3,8 @@ name = "mcc4-rs"
 version = "0.1.0"
 authors = ["Paul Gey <narpfel@gmx.de>"]
 
-[[bin]]
-name = "mcc4"
+[profile.release]
+lto = true
 
 [lib]
 name = "mcc4"
