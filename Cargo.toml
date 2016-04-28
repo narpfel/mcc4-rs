@@ -1,0 +1,13 @@
+[package]
+name = "mcc4-rs"
+version = "0.1.0"
+authors = ["Paul Gey <narpfel@gmx.de>"]
+
+[[bin]]
+name = "mcc4"
+
+[lib]
+name = "mcc4"
+
+[dependencies]
+rand = "0.3"
