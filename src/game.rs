@@ -25,12 +25,7 @@ impl Game {
 
     pub fn other_player(&self) -> Player {
         let Player(p) = self.current_player();
-        if p == 1 {
-            Player(2)
-        }
-        else {
-            Player(1)
-        }
+        Player(3 - p)
     }
 
     pub fn winner(&self) -> Option<Player> {
@@ -59,8 +54,7 @@ impl Game {
     }
 
     fn next_player(&mut self) {
-        let Player(p) = self.current_player();
-        self.current_player = if p == 1 { Player(2) } else { Player(1) };
+        self.current_player = self.other_player();
     }
 }
 
