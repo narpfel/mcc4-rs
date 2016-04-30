@@ -87,7 +87,7 @@ pub trait State : fmt::Display + Clone {
         });
 
         // TODO: Use iterators.
-        let check_diagnoals = || {
+        let winner_in_diagonals = || {
             for row in 3..rows {
                 for column in 3..columns {
                     if (0..4).map(|i| self.get(column - i, row - i)).all(|p| p == player) {
@@ -111,7 +111,7 @@ pub trait State : fmt::Display + Clone {
         || (0..columns).any(|column_number| {
             winner_in(&*self.column(column_number).unwrap())
         })
-        || check_diagnoals()
+        || winner_in_diagonals()
     }
 }
 
