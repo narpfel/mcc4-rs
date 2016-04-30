@@ -64,7 +64,7 @@ pub trait State : fmt::Display + Clone {
     fn size(&self) -> (usize, usize);
     fn row(&self, row: usize) -> Option<&[Player]>;
     fn column(&self, column: usize) -> Option<&[Player]>;
-    fn set(&mut self, row: usize, column: usize, player: Player);
+    fn set(&mut self, column: usize, row: usize, player: Player);
     fn get(&self, column: usize, row: usize) -> Player;
 
     fn play(&mut self, column_number: usize, player: Player) -> Result<Self, InvalidMove> {
@@ -75,7 +75,7 @@ pub trait State : fmt::Display + Clone {
             },
             None => return Err(InvalidMove::InvalidColumn(column_number))
         };
-        self.set(row, column_number, player);
+        self.set(column_number, row, player);
         Ok(self.clone())
     }
 
@@ -146,7 +146,7 @@ impl State for ArrayState {
         self.state_t.chunks(self.rows).nth(column)
     }
 
-    fn set(&mut self, row: usize, column: usize, player: Player) {
+    fn set(&mut self, column: usize, row: usize, player: Player) {
         self.state[row * self.columns + column] = player;
         self.state_t[column * self.rows + row] = player;
     }
