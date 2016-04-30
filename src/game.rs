@@ -68,18 +68,15 @@ pub trait State : fmt::Display + Clone {
     fn get(&self, column: usize, row: usize) -> Player;
 
     fn play(&mut self, column_number: usize, player: Player) -> Result<Self, InvalidMove> {
-        if let Some(column) = self.column(column_number) {
-            match column.iter().rposition(|&Player(p)| p == 0) {
-                Some(position) => {
-                    self.set(position, column_number, player);
-                    Ok(self.clone())
-                },
-                None => Err(InvalidMove::ColumnFull(column_number))
-            }
-        }
-        else {
-            Err(InvalidMove::InvalidColumn(column_number))
-        }
+        let row = match self.column(column_number) {
+            Some(column) => match column.iter().rposition(|&Player(p)| p == 0) {
+                Some(row) => row,
+                None => return Err(InvalidMove::ColumnFull(column_number))
+            },
+            None => return Err(InvalidMove::InvalidColumn(column_number))
+        };
+        self.set(row, column_number, player);
+        Ok(self.clone())
     }
 
     fn has_won(&self, player: Player) -> bool {
