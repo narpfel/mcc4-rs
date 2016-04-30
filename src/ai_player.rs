@@ -90,5 +90,5 @@ pub fn simulate_game<R: Rng>(rng: &mut R, game: &mut Game) -> Option<Player> {
 
 pub fn find_valid_moves(game: &Game) -> Vec<usize> {
     let columns = game.size().0;
-    (0..columns).filter(|&column| game.state().column(column).unwrap()[0] == Player(0)).collect()
+    (0..columns).filter(|&column| game.state().get(column, 0) == Player(0)).collect()
 }
