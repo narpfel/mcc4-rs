@@ -40,13 +40,11 @@ impl Game {
         }
     }
 
-    pub fn play(&mut self, column_number: usize) -> Result<ArrayState, InvalidMove> {
+    pub fn play(&mut self, column_number: usize) -> Result<(), InvalidMove> {
         let player = self.current_player();
-        let new_state = self.state.play(column_number, player);
-        if new_state.is_ok() {
-            self.next_player();
-        }
-        new_state
+        try!(self.state.play(column_number, player));
+        self.next_player();
+        Ok(())
     }
 
     pub fn state(&self) -> &ArrayState {
@@ -67,7 +65,7 @@ pub trait State : fmt::Display + Clone {
     fn set(&mut self, column: usize, row: usize, player: Player);
     fn get(&self, column: usize, row: usize) -> Player;
 
-    fn play(&mut self, column_number: usize, player: Player) -> Result<Self, InvalidMove> {
+    fn play(&mut self, column_number: usize, player: Player) -> Result<(), InvalidMove> {
         let row = match self.column(column_number) {
             Some(column) => match column.iter().rposition(|&Player(p)| p == 0) {
                 Some(row) => row,
@@ -76,7 +74,7 @@ pub trait State : fmt::Display + Clone {
             None => return Err(InvalidMove::InvalidColumn(column_number))
         };
         self.set(column_number, row, player);
-        Ok(self.clone())
+        Ok(())
     }
 
     fn has_won(&self, player: Player) -> bool {
