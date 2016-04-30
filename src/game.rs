@@ -62,8 +62,8 @@ impl Game {
 pub trait State : fmt::Display + Clone {
     fn new(columns: usize, rows: usize) -> Self;
     fn size(&self) -> (usize, usize);
-    fn row(&self, row: usize) -> Option<&Box<[Player]>>;
-    fn column(&self, column: usize) -> Option<Box<[Player]>>;
+    fn row(&self, row: usize) -> Option<&[Player]>;
+    fn column(&self, column: usize) -> Option<&[Player]>;
     fn set(&mut self, row: usize, column: usize, player: Player);
     fn get(&self, column: usize, row: usize) -> Player;
 
@@ -118,39 +118,41 @@ pub trait State : fmt::Display + Clone {
 
 #[derive(Clone, Debug)]
 pub struct ArrayState {
-    state: Box<[Box<[Player]>]>
+    state: Vec<Player>,
+    state_t: Vec<Player>,
+    columns: usize,
+    rows: usize,
 }
 
 impl State for ArrayState {
     fn new(columns: usize, rows: usize) -> Self {
         ArrayState {
-            state: vec![vec![Player(0); columns].into_boxed_slice(); rows].into_boxed_slice()
+            state: vec![Player(0); rows * columns],
+            state_t: vec![Player(0); columns * rows],
+            columns: columns,
+            rows: rows,
         }
     }
 
     fn size(&self) -> (usize, usize) {
-        (self.state[0].len(), self.state.len())
+        (self.columns, self.rows)
     }
 
-    fn row(&self, row: usize) -> Option<&Box<[Player]>> {
-        self.state.get(row)
+    fn row(&self, row: usize) -> Option<&[Player]> {
+        self.state.chunks(self.columns).nth(row)
     }
 
-    fn column(&self, column: usize) -> Option<Box<[Player]>> {
-        if column >= self.size().0 {
-            None
-        }
-        else {
-            Some(self.state.iter().map(|row| row[column]).collect::<Vec<_>>().into_boxed_slice())
-        }
+    fn column(&self, column: usize) -> Option<&[Player]> {
+        self.state_t.chunks(self.rows).nth(column)
     }
 
     fn set(&mut self, row: usize, column: usize, player: Player) {
-        self.state[row][column] = player;
+        self.state[row * self.columns + column] = player;
+        self.state_t[column * self.rows + row] = player;
     }
 
     fn get(&self, column: usize, row: usize) -> Player {
-        self.state[row][column]
+        self.state[row * self.columns + column]
     }
 }
 
@@ -161,7 +163,7 @@ impl fmt::Display for ArrayState {
             format!("{}{}{}", left, vec!["─"; columns].join(joiner), right)
         };
 
-        let rows: Vec<_> = self.state.iter().map(|row| {
+        let rows: Vec<_> = self.state.chunks(self.columns).map(|row| {
             let positions: Vec<_> = row.iter().map(|p| format!("{}", p)).collect();
             format!("│{}│\n", positions.join("│"))
         }).collect();
