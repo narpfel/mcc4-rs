@@ -2,18 +2,40 @@ use std::collections::HashMap;
 use std::thread;
 use std::sync::mpsc;
 
-use rand::{StdRng, Rng};
+use rand::{StdRng, Rng, SeedableRng};
 
 use super::*;
 
-const SIMULATIONS: usize = 100_000;
+pub const SIMULATIONS: usize = 100_000;
 
 
 #[derive(Clone, Copy)]
-pub struct AiPlayer;
+pub struct AiPlayer<'a> {
+    seed: Option<&'a [usize]>,
+}
 
 
-impl PlayerTrait for AiPlayer {
+impl<'a> AiPlayer<'a> {
+    pub fn new() -> AiPlayer<'a> {
+        AiPlayer { seed: None }
+    }
+
+    pub fn with_seed(seed: &'a [usize]) -> AiPlayer<'a> {
+        AiPlayer { seed: Some(seed) }
+    }
+
+    fn new_rng(&self) -> StdRng {
+        match self.seed {
+            Some(seed) => StdRng::from_seed(seed),
+            None => StdRng::new().expect(
+                "Could not create random number generator, not enough entropy"
+            ),
+        }
+    }
+}
+
+
+impl<'a> PlayerTrait for AiPlayer<'a> {
     fn make_move(&self, original_game: &Game) -> usize {
         let me = original_game.current_player();
         let valid_moves = find_valid_moves(original_game);
@@ -26,9 +48,9 @@ impl PlayerTrait for AiPlayer {
         let (tx, rx) = mpsc::channel();
         for (column, initial_game) in valid_moves.iter().zip(&initial_games) {
             let (column, initial_game, tx) = (column.clone(), initial_game.clone(), tx.clone());
+            let mut rng = self.new_rng();
             thread::spawn(move || {
                 let mut score = 0;
-                let mut rng = StdRng::new().expect("Could not create random number generator");
                 for _ in 0..SIMULATIONS {
                     let mut game = initial_game.clone();
                     score += match simulate_game(&mut rng, &mut game) {

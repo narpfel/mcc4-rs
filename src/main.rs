@@ -9,7 +9,7 @@ use mcc4::{Game, State, AiPlayer, HumanPlayer, PlayerTrait};
 fn main() {
     let mut game = Game::new(7, 6);
     let human_player = HumanPlayer;
-    let ai_player = AiPlayer;
+    let ai_player = AiPlayer::new();
     let mut players: Vec<&PlayerTrait> = vec![&human_player, &ai_player];
     rand::thread_rng().shuffle(&mut players);
 
