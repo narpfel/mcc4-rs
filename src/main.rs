@@ -4,7 +4,7 @@ extern crate mcc4;
 
 use rand::Rng;
 
-use mcc4::{Game, State, AiPlayer, HumanPlayer, PlayerTrait};
+use mcc4::*;
 
 fn main() {
     let mut game = Game::new(7, 6);

@@ -37,3 +37,14 @@ impl PlayerTrait for HumanPlayer {
         }
     }
 }
+
+
+#[derive(Copy, Clone)]
+pub struct AiAidedPlayer;
+
+impl PlayerTrait for AiAidedPlayer {
+    fn make_move(&self, game: &Game) -> usize {
+        println!("The AI would choose column {}.", AiPlayer::new().make_move(game) + 1);
+        HumanPlayer.make_move(game)
+    }
+}
