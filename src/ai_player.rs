@@ -74,12 +74,10 @@ pub fn simulate_game<R: Rng>(rng: &mut R, game: &mut Game) -> Option<Player> {
     loop {
         let valid_moves = find_valid_moves(game);
         if valid_moves.is_empty() {
-            return game.winner();
+            return None;
         }
-        game.play(*rng.choose(&valid_moves).unwrap()).unwrap();
-        let winner = game.winner();
-        if winner.is_some() {
-            return winner;
+        if let Some(winner) = game.play(*rng.choose(&valid_moves).unwrap()).unwrap() {
+            return Some(winner);
         }
     }
 }

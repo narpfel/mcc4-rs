@@ -19,7 +19,7 @@ fn main() {
         for player in &players {
             let move_ = player.make_move(&mut game);
             match game.play(move_) {
-                Ok(()) => {
+                Ok(_) => {
                     print!("\x1B[2J\x1B[H");
                     println!("Player {} has moved {}", game.other_player(), move_ + 1);
                     println!("{}", game.state());

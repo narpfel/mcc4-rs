@@ -40,11 +40,16 @@ impl Game {
         }
     }
 
-    pub fn play(&mut self, column_number: usize) -> Result<(), InvalidMove> {
+    pub fn play(&mut self, column_number: usize) -> Result<Option<Player>, InvalidMove> {
         let player = self.current_player();
         try!(self.state.play(column_number, player));
         self.next_player();
-        Ok(())
+        if self.state.has_just_won() {
+            Ok(Some(player))
+        }
+        else {
+            Ok(None)
+        }
     }
 
     pub fn state(&self) -> &ArrayState {
@@ -64,6 +69,7 @@ pub trait State : fmt::Display + Clone {
     fn column(&self, column: usize) -> Option<&[Player]>;
     fn set(&mut self, column: usize, row: usize, player: Player);
     fn get(&self, column: usize, row: usize) -> Player;
+    fn last_move(&self) -> (usize, usize);
 
     fn play(&mut self, column_number: usize, player: Player) -> Result<(), InvalidMove> {
         let row = match self.column(column_number) {
@@ -111,6 +117,101 @@ pub trait State : fmt::Display + Clone {
         })
         || winner_in_diagonals()
     }
+
+    // FIXME: This method panics iff it is inlined and compiled with `-O 3`:
+    // `'index out of bounds: the len is 42 but the index is 18446744073709551609'`
+    //
+    // This method is inspired by Petter Strandmark’s Connect Four winning condition checking
+    // code in https://github.com/PetterS/monte-carlo-tree-search/blob/master/games/connect_four.h,
+    // licensed under the MIT License.
+    #[inline(never)]
+    fn has_just_won(&self) -> bool {
+        let (last_column, last_row) = self.last_move();
+        let player = self.get(last_column, last_row);
+        let (last_column, last_row) = (last_column as isize, last_row as isize);
+        let (max_column, max_row) = self.size();
+        let (max_column, max_row) = (max_column as isize, max_row as isize);
+
+        {
+            let (mut left, mut right) = (0, 0);
+            let mut column = last_column - 1;
+            while column >= 0 && self.get(column as usize, last_row as usize) == player {
+                left += 1;
+                column -= 1;
+            }
+            column = last_column + 1;
+            while column < max_column && self.get(column as usize, last_row as usize) == player {
+                right += 1;
+                column += 1;
+            }
+            if left + right + 1 >= 4 {
+                return true;
+            }
+        }
+
+        {
+            let (mut up, mut down) = (0, 0);
+            let mut row = last_row - 1;
+            while row >= 0 && self.get(last_column as usize, row as usize) == player {
+                down += 1;
+                row -= 1;
+            }
+            row = last_row + 1;
+            while row < max_row && self.get(last_column as usize, row as usize) == player {
+                up += 1;
+                row += 1;
+            }
+            if up + down + 1 >= 4 {
+                return true;
+            }
+        }
+
+        {
+            let (mut up, mut down) = (0, 0);
+            let mut row = last_row - 1;
+            let mut column = last_column - 1;
+            while row >= 0 && column >= 0 && self.get(column as usize, row as usize) == player {
+                down += 1;
+                column -= 1;
+                row -= 1;
+            }
+            row = last_row + 1;
+            column = last_column + 1;
+            // This loop causes the panic. When any one of the three increments in the body is
+            // commented out, it does not panic.
+            while row < max_row && column < max_column && self.get(column as usize, row as usize) == player {
+                up += 1;
+                column += 1;
+                row += 1;
+            }
+            if up + down + 1 >= 4 {
+                return true;
+            }
+        }
+
+        {
+            let (mut up, mut down) = (0, 0);
+            let mut row = last_row + 1;
+            let mut column = last_column - 1;
+            while row < max_row && column >= 0 && self.get(column as usize, row as usize) == player {
+                up += 1;
+                column -= 1;
+                row += 1;
+            }
+            row = last_row - 1;
+            column = last_column + 1;
+            while row >= 0 && column < max_column && self.get(column as usize, row as usize) == player {
+                down += 1;
+                column += 1;
+                row -= 1;
+            }
+            if up + down + 1 >= 4 {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
 
@@ -120,6 +221,7 @@ pub struct ArrayState {
     state_t: Vec<Player>,
     columns: usize,
     rows: usize,
+    last_move: (usize, usize),
 }
 
 impl State for ArrayState {
@@ -129,6 +231,7 @@ impl State for ArrayState {
             state_t: vec![Player(0); columns * rows],
             columns: columns,
             rows: rows,
+            last_move: (0, 0)
         }
     }
 
@@ -147,10 +250,15 @@ impl State for ArrayState {
     fn set(&mut self, column: usize, row: usize, player: Player) {
         self.state[row * self.columns + column] = player;
         self.state_t[column * self.rows + row] = player;
+        self.last_move = (column, row);
     }
 
     fn get(&self, column: usize, row: usize) -> Player {
         self.state[row * self.columns + column]
+    }
+
+    fn last_move(&self) -> (usize, usize) {
+        self.last_move
     }
 }
 
