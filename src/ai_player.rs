@@ -1,4 +1,3 @@
-use std::collections::HashMap;
 use std::thread;
 use std::sync::mpsc;
 
@@ -39,16 +38,14 @@ impl<'a> PlayerTrait for AiPlayer<'a> {
     fn make_move(&self, original_game: &Game) -> usize {
         let me = original_game.current_player();
         let valid_moves = find_valid_moves(original_game);
-        let initial_games: Vec<_> = valid_moves.iter().map(|column| {
-            let mut game = original_game.clone();
-            game.play(*column).unwrap();
-            game
-        }).collect();
 
         let (tx, rx) = mpsc::channel();
-        for (column, initial_game) in valid_moves.iter().zip(&initial_games) {
-            let (column, initial_game, tx) = (column.clone(), initial_game.clone(), tx.clone());
+        for column in &valid_moves {
+            let (mut initial_game, tx) = (original_game.clone(), tx.clone());
+            let column = *column;
             let mut rng = self.new_rng();
+
+            initial_game.play(column).unwrap();
             thread::spawn(move || {
                 let mut score = 0;
                 for _ in 0..SIMULATIONS {
@@ -62,13 +59,13 @@ impl<'a> PlayerTrait for AiPlayer<'a> {
             });
         }
 
-        let mut scores = HashMap::new();
-        for _ in 0..valid_moves.len() {
+        let mut scores = Vec::with_capacity(valid_moves.len());
+        for _ in &valid_moves {
             let (column, score) = rx.recv().unwrap();
-            scores.insert(column, score);
+            scores.push((column, score));
         }
 
-        *scores.iter().max_by_key(|&(_, score)| *score).unwrap().0
+        scores.iter().max_by_key(|&&(_, score)| score).unwrap().0
     }
 }
 
