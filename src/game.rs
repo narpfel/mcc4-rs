@@ -118,9 +118,6 @@ pub trait State : fmt::Display + Clone {
         || winner_in_diagonals()
     }
 
-    // FIXME: This method panics iff it is inlined and compiled with optimisations enabled:
-    // `'index out of bounds: the len is 42 but the index is 18446744073709551609'`
-    //
     // This method is inspired by Petter Strandmark’s Connect Four winning condition checking
     // code in https://github.com/PetterS/monte-carlo-tree-search/blob/master/games/connect_four.h,
     // licensed under the MIT License.
@@ -177,8 +174,6 @@ pub trait State : fmt::Display + Clone {
             }
             row = last_row + 1;
             column = last_column + 1;
-            // This loop causes the panic. When any one of the three increments in the body is
-            // commented out, it does not panic.
             while row < max_row && column < max_column && self.get(column as usize, row as usize) == player {
                 up += 1;
                 column += 1;
