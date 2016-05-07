@@ -72,14 +72,20 @@ pub trait State : fmt::Display + Clone {
     fn last_move(&self) -> (usize, usize);
 
     fn play(&mut self, column_number: usize, player: Player) -> Result<(), InvalidMove> {
-        let row = match self.column(column_number) {
-            Some(column) => match column.iter().rposition(|&Player(p)| p == 0) {
-                Some(row) => row,
-                None => return Err(InvalidMove::ColumnFull(column_number))
-            },
-            None => return Err(InvalidMove::InvalidColumn(column_number))
-        };
-        self.set(column_number, row, player);
+        let (max_column, max_row) = self.size();
+        if column_number >= max_column {
+            return Err(InvalidMove::InvalidColumn(column_number));
+        }
+        if self.get(column_number, 0) != Player(0) {
+            return Err(InvalidMove::ColumnFull(column_number))
+        }
+
+        let mut row = 0;
+        while row < max_row && self.get(column_number, row) == Player(0) {
+            row += 1;
+        }
+
+        self.set(column_number, row - 1, player);
         Ok(())
     }
 
