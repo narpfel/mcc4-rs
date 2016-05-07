@@ -118,7 +118,7 @@ pub trait State : fmt::Display + Clone {
         || winner_in_diagonals()
     }
 
-    // FIXME: This method panics iff it is inlined and compiled with `-O 3`:
+    // FIXME: This method panics iff it is inlined and compiled with optimisations enabled:
     // `'index out of bounds: the len is 42 but the index is 18446744073709551609'`
     //
     // This method is inspired by Petter Strandmark’s Connect Four winning condition checking
