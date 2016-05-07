@@ -66,7 +66,7 @@ pub trait State : fmt::Display + Clone {
     fn new(columns: usize, rows: usize) -> Self;
     fn size(&self) -> (usize, usize);
     fn row(&self, row: usize) -> Option<&[Player]>;
-    fn column(&self, column: usize) -> Option<&[Player]>;
+    fn column(&self, column: usize) -> Option<Box<[Player]>>;
     fn set(&mut self, column: usize, row: usize, player: Player);
     fn get(&self, column: usize, row: usize) -> Player;
     fn last_move(&self) -> (usize, usize);
@@ -219,7 +219,6 @@ pub trait State : fmt::Display + Clone {
 #[derive(Clone, Debug)]
 pub struct ArrayState {
     state: Vec<Player>,
-    state_t: Vec<Player>,
     columns: usize,
     rows: usize,
     last_move: (usize, usize),
@@ -229,7 +228,6 @@ impl State for ArrayState {
     fn new(columns: usize, rows: usize) -> Self {
         ArrayState {
             state: vec![Player(0); rows * columns],
-            state_t: vec![Player(0); columns * rows],
             columns: columns,
             rows: rows,
             last_move: (0, 0)
@@ -244,13 +242,21 @@ impl State for ArrayState {
         self.state.chunks(self.columns).nth(row)
     }
 
-    fn column(&self, column: usize) -> Option<&[Player]> {
-        self.state_t.chunks(self.rows).nth(column)
+    fn column(&self, column: usize) -> Option<Box<[Player]>> {
+        if column < self.columns {
+            Some(
+                self.state.chunks(self.columns).map(
+                    |row| row[column]
+                ).collect::<Vec<_>>().into_boxed_slice()
+            )
+        }
+        else {
+            None
+        }
     }
 
     fn set(&mut self, column: usize, row: usize, player: Player) {
         self.state[row * self.columns + column] = player;
-        self.state_t[column * self.rows + row] = player;
         self.last_move = (column, row);
     }
 
