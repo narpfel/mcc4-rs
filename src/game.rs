@@ -143,7 +143,8 @@ pub trait State : fmt::Display + Clone {
                 column -= 1;
             }
             column = last_column + 1;
-            while column < max_column && self.get(column as usize, last_row as usize) == player {
+            while column < max_column
+                    && self.get(column as usize, last_row as usize) == player {
                 right += 1;
                 column += 1;
             }
@@ -173,14 +174,18 @@ pub trait State : fmt::Display + Clone {
             let (mut up, mut down) = (0, 0);
             let mut row = last_row - 1;
             let mut column = last_column - 1;
-            while row >= 0 && column >= 0 && self.get(column as usize, row as usize) == player {
+            while row >= 0
+                    && column >= 0
+                    && self.get(column as usize, row as usize) == player {
                 down += 1;
                 column -= 1;
                 row -= 1;
             }
             row = last_row + 1;
             column = last_column + 1;
-            while row < max_row && column < max_column && self.get(column as usize, row as usize) == player {
+            while row < max_row
+                    && column < max_column
+                    && self.get(column as usize, row as usize) == player {
                 up += 1;
                 column += 1;
                 row += 1;
@@ -194,14 +199,18 @@ pub trait State : fmt::Display + Clone {
             let (mut up, mut down) = (0, 0);
             let mut row = last_row + 1;
             let mut column = last_column - 1;
-            while row < max_row && column >= 0 && self.get(column as usize, row as usize) == player {
+            while row < max_row
+                    && column >= 0
+                    && self.get(column as usize, row as usize) == player {
                 up += 1;
                 column -= 1;
                 row += 1;
             }
             row = last_row - 1;
             column = last_column + 1;
-            while row >= 0 && column < max_column && self.get(column as usize, row as usize) == player {
+            while row >= 0
+                    && column < max_column
+                    && self.get(column as usize, row as usize) == player {
                 down += 1;
                 column += 1;
                 row -= 1;
@@ -261,7 +270,9 @@ impl State for ArrayState {
     }
 
     fn get(&self, column: usize, row: usize) -> Player {
-        self.state[row * self.columns + column]
+        unsafe {
+            *self.state.get_unchecked(row * self.columns + column)
+        }
     }
 
     fn last_move(&self) -> (usize, usize) {
