@@ -1,13 +1,10 @@
 [package]
-name = "mcc4-rs"
+name = "mcc4"
 version = "0.1.0"
 authors = ["Paul Gey <narpfel@gmx.de>"]
 
 [profile.release]
 lto = true
-
-[lib]
-name = "mcc4"
 
 [dependencies]
 rand = "0.3"
