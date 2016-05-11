@@ -7,10 +7,10 @@ use rand::Rng;
 use mcc4::*;
 
 fn main() {
-    let mut game = Game::new(7, 6);
-    let human_player = HumanPlayer;
+    let mut game = ConnectFour::<ArrayState>::new(7, 6);
+    let human_player = HumanPlayer::new();
     let ai_player = AiPlayer::new();
-    let mut players: Vec<&PlayerTrait> = vec![&human_player, &ai_player];
+    let mut players: Vec<&PlayerTrait<Game=_>> = vec![&human_player, &ai_player];
     rand::thread_rng().shuffle(&mut players);
 
     println!("\x1B[2J\x1B[H");
@@ -21,7 +21,7 @@ fn main() {
             match game.play(move_) {
                 Ok(_) => {
                     print!("\x1B[2J\x1B[H");
-                    println!("Player {} has moved {}", game.other_player(), move_ + 1);
+                    println!("Player {} has moved {}", game.other_player(), move_);
                     println!("{}", game.state());
                 },
                 Err(err) => println!("Invalid input: {:?}", err),

@@ -1,3 +1,4 @@
+use std::marker::PhantomData;
 use std::thread;
 use std::sync::mpsc;
 
@@ -9,18 +10,25 @@ pub const SIMULATIONS: usize = 100_000;
 
 
 #[derive(Clone, Copy)]
-pub struct AiPlayer<'a> {
+pub struct AiPlayer<'a, G: Game> {
     seed: Option<&'a [usize]>,
+    _game: PhantomData<G>,
 }
 
 
-impl<'a> AiPlayer<'a> {
-    pub fn new() -> AiPlayer<'a> {
-        AiPlayer { seed: None }
+impl<'a, G: Game> AiPlayer<'a, G> {
+    pub fn new() -> AiPlayer<'a, G> {
+        AiPlayer {
+            seed: None,
+            _game: Default::default(),
+        }
     }
 
-    pub fn with_seed(seed: &'a [usize]) -> AiPlayer<'a> {
-        AiPlayer { seed: Some(seed) }
+    pub fn with_seed(seed: &'a [usize]) -> AiPlayer<'a, G> {
+        AiPlayer {
+            seed: Some(seed),
+            _game: Default::default(),
+        }
     }
 
     fn new_rng(&self) -> StdRng {
@@ -34,10 +42,12 @@ impl<'a> AiPlayer<'a> {
 }
 
 
-impl<'a> PlayerTrait for AiPlayer<'a> {
-    fn make_move(&self, original_game: &Game) -> usize {
+impl<'a, G: Game + 'static> PlayerTrait for AiPlayer<'a, G> {
+    type Game = G;
+
+    fn make_move(&self, original_game: &G) -> G::Move {
         let me = original_game.current_player();
-        let valid_moves = find_valid_moves(original_game);
+        let valid_moves = original_game.valid_moves();
 
         let (tx, rx) = mpsc::channel();
         for column in &valid_moves {
@@ -49,8 +59,8 @@ impl<'a> PlayerTrait for AiPlayer<'a> {
             thread::spawn(move || {
                 let mut score = 0;
                 for _ in 0..SIMULATIONS {
-                    let mut game = initial_game.clone();
-                    score += match simulate_game(&mut rng, &mut game) {
+                    let game = initial_game.clone();
+                    score += match simulate_game(&mut rng, game) {
                         Some(player) => if player == me { 2 } else { -2 },
                         _ => 1
                     };
@@ -70,9 +80,9 @@ impl<'a> PlayerTrait for AiPlayer<'a> {
 }
 
 
-pub fn simulate_game<R: Rng>(rng: &mut R, game: &mut Game) -> Option<Player> {
+pub fn simulate_game<R: Rng, G: Game>(rng: &mut R, mut game: G) -> Option<Player> {
     loop {
-        let valid_moves = find_valid_moves(game);
+        let valid_moves = game.valid_moves();
         if valid_moves.is_empty() {
             return None;
         }
@@ -80,10 +90,4 @@ pub fn simulate_game<R: Rng>(rng: &mut R, game: &mut Game) -> Option<Player> {
             return Some(winner);
         }
     }
-}
-
-
-pub fn find_valid_moves(game: &Game) -> Vec<usize> {
-    let columns = game.size().0;
-    (0..columns).filter(|&column| game.state().get(column, 0) == Player(0)).collect()
 }

@@ -1,17 +1,18 @@
 use std::fmt;
 
+use super::{Game, Player};
+
 #[derive(Debug, Clone)]
-pub struct Game {
+pub struct ConnectFour<S: State> {
     current_player: Player,
-    state: ArrayState,
+    state: S,
 }
 
-impl Game {
-    pub fn new(columns: usize, rows: usize) -> Game {
-        Game {
+impl<S: State> ConnectFour<S> {
+    pub fn new(columns: usize, rows: usize) -> ConnectFour<S> {
+        ConnectFour {
             current_player: Player(1),
-            // TODO: Make generic over `state`s type‽
-            state: ArrayState::new(columns, rows)
+            state: S::new(columns, rows),
         }
     }
 
@@ -19,28 +20,19 @@ impl Game {
         self.state.size()
     }
 
-    pub fn current_player(&self) -> Player {
-        self.current_player
-    }
-
+    // Not in trait, because it assumes two players.
     pub fn other_player(&self) -> Player {
         let Player(p) = self.current_player();
         Player(3 - p)
     }
+}
 
-    pub fn winner(&self) -> Option<Player> {
-        if self.state.has_won(self.current_player()) {
-            Some(self.current_player())
-        }
-        else if self.state.has_won(self.other_player()) {
-            Some(self.other_player())
-        }
-        else {
-            None
-        }
-    }
+impl<S: State> Game for ConnectFour<S> {
+    type State = S;
+    type Move = usize;
+    type InvalidMove = InvalidMove;
 
-    pub fn play(&mut self, column_number: usize) -> Result<Option<Player>, InvalidMove> {
+    fn play(&mut self, column_number: Self::Move) -> Result<Option<Player>, InvalidMove> {
         let player = self.current_player();
         try!(self.state.play(column_number, player));
         self.next_player();
@@ -52,8 +44,29 @@ impl Game {
         }
     }
 
-    pub fn state(&self) -> &ArrayState {
+    fn winner(&self) -> Option<Player> {
+        if self.state.has_won(self.current_player()) {
+            Some(self.current_player())
+        }
+        else if self.state.has_won(self.other_player()) {
+            Some(self.other_player())
+        }
+        else {
+            None
+        }
+    }
+
+    fn valid_moves(&self) -> Vec<Self::Move> {
+        let columns = self.size().0;
+        (0..columns).filter(|&column| self.state().get(column, 0) == Player(0)).collect()
+    }
+
+    fn state(&self) -> &S {
         &self.state
+    }
+
+    fn current_player(&self) -> Player {
+        self.current_player
     }
 
     fn next_player(&mut self) {
@@ -62,7 +75,7 @@ impl Game {
 }
 
 
-pub trait State : fmt::Display + Clone {
+pub trait State : fmt::Display + Clone + Send + Sync {
     fn new(columns: usize, rows: usize) -> Self;
     fn size(&self) -> (usize, usize);
     fn row(&self, row: usize) -> Option<&[Player]>;
@@ -298,7 +311,7 @@ impl fmt::Display for ArrayState {
             body = rows.join(&fill_row("├", "┼", "┤\n")),
             bottom_row = fill_row("└", "┴", "┘\n")
         ));
-        write!(f, " {}\n", (1..columns + 1).map(|n| format!("{}", n)).collect::<Vec<_>>().join(" "))
+        write!(f, " {}\n", (0..columns).map(|n| format!("{}", n)).collect::<Vec<_>>().join(" "))
     }
 }
 
@@ -307,17 +320,4 @@ impl fmt::Display for ArrayState {
 pub enum InvalidMove {
     InvalidColumn(usize),
     ColumnFull(usize),
-}
-
-
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct Player(pub u8);
-
-impl fmt::Display for Player {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(
-            f, "{}\x1B[0m",
-            if self.0 == 1 { "\x1B[44;1mX" } else if self.0 == 2 { "\x1B[41;1mO" } else { " " }
-        )
-    }
 }
