@@ -239,16 +239,16 @@ pub trait State : fmt::Display + Clone + Send + Sync {
 
 
 #[derive(Clone, Debug)]
-pub struct ArrayState {
+pub struct VecState {
     state: Vec<Player>,
     columns: usize,
     rows: usize,
     last_move: (usize, usize),
 }
 
-impl State for ArrayState {
+impl State for VecState {
     fn new(columns: usize, rows: usize) -> Self {
-        ArrayState {
+        VecState {
             state: vec![Player(0); rows * columns],
             columns: columns,
             rows: rows,
@@ -293,7 +293,7 @@ impl State for ArrayState {
     }
 }
 
-impl fmt::Display for ArrayState {
+impl fmt::Display for VecState {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let columns = self.size().0;
         let fill_row = |left, joiner, right| {
