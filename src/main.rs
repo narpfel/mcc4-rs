@@ -34,6 +34,11 @@ fn main() {
                 println!("Player {} has won.", winner);
                 break 'outer;
             }
+
+            if game.valid_moves().is_empty() {
+                println!("Draw.");
+                break 'outer;
+            }
         }
     }
 }
