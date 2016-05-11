@@ -85,13 +85,8 @@ pub trait State : fmt::Display + Clone + Send + Sync {
     fn last_move(&self) -> (usize, usize);
 
     fn play(&mut self, column_number: usize, player: Player) -> Result<(), InvalidMove> {
-        let (max_column, max_row) = self.size();
-        if column_number >= max_column {
-            return Err(InvalidMove::InvalidColumn(column_number));
-        }
-        if self.get(column_number, 0) != Player(0) {
-            return Err(InvalidMove::ColumnFull(column_number))
-        }
+        try!(self.validate_move(column_number));
+        let max_row = self.size().1;
 
         let mut row = 0;
         while row < max_row && self.get(column_number, row) == Player(0) {
@@ -234,6 +229,19 @@ pub trait State : fmt::Display + Clone + Send + Sync {
         }
 
         return false;
+    }
+
+    fn validate_move(&self, column_number: usize) -> Result<(), InvalidMove> {
+        let max_column = self.size().0;
+        if column_number >= max_column {
+            Err(InvalidMove::InvalidColumn(column_number))
+        }
+        else if self.get(column_number, 0) != Player(0) {
+            Err(InvalidMove::ColumnFull(column_number))
+        }
+        else {
+            Ok(())
+        }
     }
 }
 
