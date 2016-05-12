@@ -12,6 +12,11 @@ pub trait Game: Send + Sync + Clone {
     fn state(&self) -> &Self::State;
     fn current_player(&self) -> Player;
     fn next_player(&mut self);
+
+    /// Intended to be overwritten by implementors for better performance (e. g. storing a `bool`)
+    fn has_ended(&self) -> bool {
+        self.valid_moves().is_empty() || self.winner().is_some()
+    }
 }
 
 
