@@ -9,7 +9,7 @@ pub mod connect_four;
 mod game;
 
 pub use ai_player::AiPlayer;
-pub use game::{Game, Player};
+pub use game::{Game, Player, Winner};
 pub use connect_four::*;
 
 
