@@ -17,6 +17,10 @@ pub trait PlayerTrait {
     type Game: Game;
 
     fn make_move(&self, game: &Self::Game) -> <Self::Game as Game>::Move;
+
+    fn invalid_move(&self, _move: <Self::Game as Game>::InvalidMove) {
+        // ignore by default
+    }
 }
 
 
@@ -52,6 +56,10 @@ impl<G: Game> PlayerTrait for HumanPlayer<G> {
                 }
             }
         }
+    }
+
+    fn invalid_move(&self, move_: <Self::Game as Game>::InvalidMove) {
+        println!("Invalid input: {:?}", move_)
     }
 }
 
