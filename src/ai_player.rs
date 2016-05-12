@@ -59,8 +59,8 @@ impl<'a, G: Game + 'static> PlayerTrait for AiPlayer<'a, G> {
             thread::spawn(move || {
                 let mut score = 0;
                 for _ in 0..SIMULATIONS {
-                    let game = initial_game.clone();
-                    score += match simulate_game(&mut rng, game) {
+                    let mut game = initial_game.clone();
+                    score += match simulate_game(&mut rng, &mut game) {
                         Some(player) => if player == me { 2 } else { -2 },
                         _ => 1
                     };
@@ -80,7 +80,7 @@ impl<'a, G: Game + 'static> PlayerTrait for AiPlayer<'a, G> {
 }
 
 
-pub fn simulate_game<R: Rng, G: Game>(rng: &mut R, mut game: G) -> Option<Player> {
+pub fn simulate_game<R: Rng, G: Game>(rng: &mut R, game: &mut G) -> Option<Player> {
     loop {
         let valid_moves = game.valid_moves();
         if valid_moves.is_empty() {
