@@ -7,7 +7,7 @@ use rand::Rng;
 use mcc4::*;
 
 fn main() {
-    let game = ConnectFour::<VecState>::new(7, 6);
+    let game = ConnectFour::<VecState>::new(7, 6).unwrap();
     let human_player = HumanPlayer::new();
     let ai_player = AiPlayer::new();
     let mut players: Vec<Box<PlayerTrait<Game=_>>> = vec![Box::new(human_player), Box::new(ai_player)];

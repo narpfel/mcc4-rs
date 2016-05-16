@@ -8,7 +8,7 @@ use mcc4::ai_player::SIMULATIONS;
 
 fn main() {
     let columns = 7;
-    let game = ConnectFour::<VecState>::new(columns, 6);
+    let game = ConnectFour::<VecState>::new(columns, 6).unwrap();
     let seed = [1, 2, 3, 42];
     let benchmark_player = AiPlayer::with_seed(&seed);
     let now = Instant::now();

@@ -10,12 +10,14 @@ pub struct ConnectFour<S: State> {
 }
 
 impl<S: State> ConnectFour<S> {
-    pub fn new(columns: usize, rows: usize) -> ConnectFour<S> {
-        ConnectFour {
-            current_player: Player(1),
-            state: S::new(columns, rows),
-            winner: None,
-        }
+    pub fn new(columns: usize, rows: usize) -> Result<ConnectFour<S>, ()> {
+        Ok(
+            ConnectFour {
+                current_player: Player(1),
+                state: try!(S::new(columns, rows)),
+                winner: None,
+            }
+        )
     }
 
     pub fn size(&self) -> (usize, usize) {
@@ -71,7 +73,7 @@ impl<S: State> Game for ConnectFour<S> {
 
 
 pub trait State : fmt::Display + Clone + Send + Sync {
-    fn new(columns: usize, rows: usize) -> Self;
+    fn new(columns: usize, rows: usize) -> Result<Self, ()>;
     fn size(&self) -> (usize, usize);
     fn row(&self, row: usize) -> Option<&[Player]>;
     fn column(&self, column: usize) -> Option<Box<[Player]>>;
@@ -236,13 +238,15 @@ pub struct VecState {
 }
 
 impl State for VecState {
-    fn new(columns: usize, rows: usize) -> Self {
-        VecState {
-            state: vec![Player(0); rows * columns],
-            columns: columns,
-            rows: rows,
-            last_move: (0, 0)
-        }
+    fn new(columns: usize, rows: usize) -> Result<Self, ()> {
+        Ok(
+            VecState {
+                state: vec![Player(0); rows * columns],
+                columns: columns,
+                rows: rows,
+                last_move: (0, 0)
+            }
+        )
     }
 
     fn size(&self) -> (usize, usize) {
