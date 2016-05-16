@@ -243,6 +243,27 @@ pub trait State : fmt::Display + Clone + Send + Sync {
             Ok(())
         }
     }
+
+    fn _fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let (n_columns, n_rows) = self.size();
+        let fill_row = |left, joiner, right| {
+            format!("{}{}{}", left, vec!["─"; n_columns].join(joiner), right)
+        };
+
+        let rows: Vec<_> = (0..n_rows).map(|i| {
+            let row = self.row(i).unwrap_or_else(|| unreachable!());
+            let positions: Vec<_> = row.iter().map(|p| format!("{}", p)).collect();
+            format!("│{}│\n", positions.join("│"))
+        }).collect();
+
+        try!(write!(
+            f, "{top_row}{body}{bottom_row}",
+            top_row = fill_row("┌", "┬", "┐\n"),
+            body = rows.join(&fill_row("├", "┼", "┤\n")),
+            bottom_row = fill_row("└", "┴", "┘\n")
+        ));
+        write!(f, " {}\n", (0..n_columns).map(|n| format!("{}", n)).collect::<Vec<_>>().join(" "))
+    }
 }
 
 
@@ -303,23 +324,7 @@ impl State for VecState {
 
 impl fmt::Display for VecState {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let columns = self.size().0;
-        let fill_row = |left, joiner, right| {
-            format!("{}{}{}", left, vec!["─"; columns].join(joiner), right)
-        };
-
-        let rows: Vec<_> = self.state.chunks(self.columns).map(|row| {
-            let positions: Vec<_> = row.iter().map(|p| format!("{}", p)).collect();
-            format!("│{}│\n", positions.join("│"))
-        }).collect();
-
-        try!(write!(
-            f, "{top_row}{body}{bottom_row}",
-            top_row = fill_row("┌", "┬", "┐\n"),
-            body = rows.join(&fill_row("├", "┼", "┤\n")),
-            bottom_row = fill_row("└", "┴", "┘\n")
-        ));
-        write!(f, " {}\n", (0..columns).map(|n| format!("{}", n)).collect::<Vec<_>>().join(" "))
+        self._fmt(f)
     }
 }
 
