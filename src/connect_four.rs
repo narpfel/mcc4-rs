@@ -6,6 +6,7 @@ use super::{Game, Player};
 pub struct ConnectFour<S: State> {
     current_player: Player,
     state: S,
+    winner: Option<Player>,
 }
 
 impl<S: State> ConnectFour<S> {
@@ -13,6 +14,7 @@ impl<S: State> ConnectFour<S> {
         ConnectFour {
             current_player: Player(1),
             state: S::new(columns, rows),
+            winner: None,
         }
     }
 
@@ -37,7 +39,8 @@ impl<S: State> Game for ConnectFour<S> {
         try!(self.state.play(column_number, player));
         self.next_player();
         if self.state.has_just_won() {
-            Ok(Some(player))
+            self.winner = Some(player);
+            Ok(self.winner)
         }
         else {
             Ok(None)
@@ -45,15 +48,7 @@ impl<S: State> Game for ConnectFour<S> {
     }
 
     fn winner(&self) -> Option<Player> {
-        if self.state.has_won(self.current_player()) {
-            Some(self.current_player())
-        }
-        else if self.state.has_won(self.other_player()) {
-            Some(self.other_player())
-        }
-        else {
-            None
-        }
+        self.winner
     }
 
     fn valid_moves(&self) -> Vec<Self::Move> {
@@ -95,41 +90,6 @@ pub trait State : fmt::Display + Clone + Send + Sync {
 
         self.set(column_number, row - 1, player);
         Ok(())
-    }
-
-    fn has_won(&self, player: Player) -> bool {
-        let (columns, rows) = self.size();
-
-        let winner_in = |stones: &[Player]| stones.windows(4).any(|window| {
-            window.iter().all(|p| *p == player)
-        });
-
-        // TODO: Use iterators.
-        let winner_in_diagonals = || {
-            for row in 3..rows {
-                for column in 3..columns {
-                    if (0..4).map(|i| self.get(column - i, row - i)).all(|p| p == player) {
-                        return true;
-                    }
-                }
-            }
-            for row in 3..rows {
-                for column in 0..columns - 3 {
-                    if (0..4).map(|i| self.get(column + i, row - i)).all(|p| p == player) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        };
-
-        (0..rows).any(|row_number| {
-            winner_in(self.row(row_number).unwrap())
-        })
-        || (0..columns).any(|column_number| {
-            winner_in(&*self.column(column_number).unwrap())
-        })
-        || winner_in_diagonals()
     }
 
     // This method is inspired by Petter Strandmark’s Connect Four winning condition checking
