@@ -75,7 +75,7 @@ impl<S: State> Game for ConnectFour<S> {
 pub trait State : fmt::Display + Clone + Send + Sync {
     fn new(columns: usize, rows: usize) -> Result<Self, ()>;
     fn size(&self) -> (usize, usize);
-    fn row(&self, row: usize) -> Option<&[Player]>;
+    fn row(&self, row: usize) -> Option<Box<[Player]>>;
     fn column(&self, column: usize) -> Option<Box<[Player]>>;
     fn set(&mut self, column: usize, row: usize, player: Player);
     fn get(&self, column: usize, row: usize) -> Player;
@@ -253,8 +253,8 @@ impl State for VecState {
         (self.columns, self.rows)
     }
 
-    fn row(&self, row: usize) -> Option<&[Player]> {
-        self.state.chunks(self.columns).nth(row)
+    fn row(&self, row: usize) -> Option<Box<[Player]>> {
+        self.state.chunks(self.columns).nth(row).map(|row| row.to_vec().into_boxed_slice())
     }
 
     fn column(&self, column: usize) -> Option<Box<[Player]>> {
