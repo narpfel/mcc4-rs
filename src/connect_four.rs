@@ -75,11 +75,32 @@ impl<S: State> Game for ConnectFour<S> {
 pub trait State : fmt::Display + Clone + Send + Sync {
     fn new(columns: usize, rows: usize) -> Result<Self, ()>;
     fn size(&self) -> (usize, usize);
-    fn row(&self, row: usize) -> Option<Box<[Player]>>;
-    fn column(&self, column: usize) -> Option<Box<[Player]>>;
     fn set(&mut self, column: usize, row: usize, player: Player);
     fn get(&self, column: usize, row: usize) -> Player;
     fn last_move(&self) -> (usize, usize);
+
+    fn row(&self, row: usize) -> Option<Box<[Player]>> {
+        if row >= self.size().1 {
+            return None;
+        }
+        Some(
+            (0..self.size().0)
+            .map(|column| self.get(column, row))
+            .collect::<Vec<_>>().into_boxed_slice()
+        )
+    }
+
+    fn column(&self, column: usize) -> Option<Box<[Player]>> {
+        if column >= self.size().0 {
+            return None;
+        }
+        Some(
+            (0..self.size().1)
+            .map(|row| self.get(column, row))
+            .collect::<Vec<_>>().into_boxed_slice()
+        )
+    }
+
 
     fn play(&mut self, column_number: usize, player: Player) -> Result<(), InvalidMove> {
         try!(self.validate_move(column_number));
@@ -251,23 +272,6 @@ impl State for VecState {
 
     fn size(&self) -> (usize, usize) {
         (self.columns, self.rows)
-    }
-
-    fn row(&self, row: usize) -> Option<Box<[Player]>> {
-        self.state.chunks(self.columns).nth(row).map(|row| row.to_vec().into_boxed_slice())
-    }
-
-    fn column(&self, column: usize) -> Option<Box<[Player]>> {
-        if column < self.columns {
-            Some(
-                self.state.chunks(self.columns).map(
-                    |row| row[column]
-                ).collect::<Vec<_>>().into_boxed_slice()
-            )
-        }
-        else {
-            None
-        }
     }
 
     fn set(&mut self, column: usize, row: usize, player: Player) {
