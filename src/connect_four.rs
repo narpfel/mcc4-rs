@@ -4,8 +4,8 @@ use super::{Game, Player};
 
 #[derive(Debug, Clone)]
 pub struct ConnectFour<S: State> {
-    current_player: Player,
     state: S,
+    current_player: Player,
     winner: Option<Player>,
 }
 
