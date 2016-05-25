@@ -54,8 +54,7 @@ impl<S: State> Game for ConnectFour<S> {
     }
 
     fn valid_moves(&self) -> Vec<Self::Move> {
-        let columns = self.size().0;
-        (0..columns).filter(|&column| self.state().get(column, 0) == Player(0)).collect()
+        self.state.valid_moves()
     }
 
     fn state(&self) -> &S {
@@ -225,6 +224,19 @@ pub trait State : fmt::Display + Clone + Send + Sync {
         else {
             Ok(())
         }
+    }
+
+    fn valid_moves(&self) -> Vec<usize> {
+        let columns = self.size().0;
+        // Cannot `filter()` and `collect()` here as `Filter::size_hint()` returns a lower bound
+        // of 0, which means the `Vec` has to realloc several times.
+        let mut v = Vec::with_capacity(columns);
+        for i in 0..columns {
+            if self.get(i, 0) == Player(0) {
+                v.push(i);
+            }
+        }
+        v
     }
 
     fn _fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
