@@ -60,7 +60,8 @@ impl<'a, G: Game + 'static> PlayerTrait for AiPlayer<'a, G> {
                 let mut score = 0;
                 for _ in 0..SIMULATIONS {
                     let mut game = initial_game.clone();
-                    score += match simulate_game(&mut rng, &mut game) {
+                    let mut valid_moves = Vec::new();
+                    score += match simulate_game(&mut rng, &mut game, &mut valid_moves) {
                         Some(player) => if player == me { 2 } else { -2 },
                         _ => 1
                     };
@@ -75,14 +76,18 @@ impl<'a, G: Game + 'static> PlayerTrait for AiPlayer<'a, G> {
             scores.push((column, score));
         }
 
-        scores.iter().max_by_key(|&&(_, score)| score).unwrap().0
+        scores.into_iter().max_by_key(|&(_, score)| score).unwrap().0
     }
 }
 
 
-pub fn simulate_game<R: Rng, G: Game>(rng: &mut R, game: &mut G) -> Option<Player> {
+pub fn simulate_game<R: Rng, G: Game>(
+    rng: &mut R,
+    game: &mut G,
+    valid_moves: &mut Vec<<G as Game>::Move>
+) -> Option<Player> {
     loop {
-        let valid_moves = game.valid_moves();
+        game.valid_moves_fast(valid_moves);
         if valid_moves.is_empty() {
             return None;
         }

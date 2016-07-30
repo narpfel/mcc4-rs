@@ -11,6 +11,7 @@ pub trait Game: Send + Sync + Clone {
     fn play(&mut self, move_: Self::Move) -> Result<Option<Player>, Self::InvalidMove>;
     fn winner(&self) -> Option<Player>;
     fn valid_moves(&self) -> Vec<Self::Move>;
+    fn valid_moves_fast(&self, valid_moves: &mut Vec<Self::Move>);
     fn state(&self) -> &Self::State;
     fn current_player(&self) -> Player;
     fn next_player(&mut self);

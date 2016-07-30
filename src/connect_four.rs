@@ -57,6 +57,10 @@ impl<S: State> Game for ConnectFour<S> {
         self.state.valid_moves()
     }
 
+    fn valid_moves_fast(&self, valid_moves: &mut Vec<Self::Move>) {
+        self.state.valid_moves_fast(valid_moves);
+    }
+
     fn state(&self) -> &S {
         &self.state
     }
@@ -227,16 +231,22 @@ pub trait State : fmt::Display + Clone + Send + Sync {
     }
 
     fn valid_moves(&self) -> Vec<usize> {
-        let columns = self.size().0;
         // Cannot `filter()` and `collect()` here as `Filter::size_hint()` returns a lower bound
         // of 0, which means the `Vec` has to realloc several times.
+
+        let columns = self.size().0;
         let mut v = Vec::with_capacity(columns);
+        self.valid_moves_fast(&mut v);
+        v
+    }
+
+    fn valid_moves_fast(&self, valid_moves: &mut Vec<usize>) {
+        let columns = self.size().0;
         for i in 0..columns {
             if self.get(i, 0) == Player(0) {
-                v.push(i);
+                valid_moves.push(i);
             }
         }
-        v
     }
 
     fn _fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -369,16 +379,16 @@ impl State for BitState {
         )
     }
 
-    fn valid_moves(&self) -> Vec<usize> {
+    fn valid_moves_fast(&self, valid_moves: &mut Vec<usize>) {
+        valid_moves.clear();
         // Cannot `filter()` and `collect()` here as `Filter::size_hint()` returns a lower bound
         // of 0, which means the `Vec` has to realloc several times.
-        let mut v = Vec::with_capacity(self.columns as usize);
-        for (i, &empty) in self.empty_per_column.iter().take(self.columns as usize).enumerate() {
+        // The explicit loop is also slightly faster than an `extend` with `filter` and `map`.
+        for (i, &empty) in self.empty_per_column[..self.columns as usize].iter().enumerate() {
             if empty != 0 {
-                v.push(i);
+                valid_moves.push(i);
             }
         }
-        v
     }
 
     fn last_move(&self) -> (usize, usize) {
