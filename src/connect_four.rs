@@ -417,8 +417,8 @@ impl BitBoard {
 
         (vertical & vertical >> 2)
         | (horizontal & horizontal >> 2 * (rows + 1))
-        | (diagonal_du & diagonal_du >> 2 * rows)
-        | (diagonal_ud & diagonal_ud >> 2 * (rows + 2))
+        | (diagonal_ud & diagonal_ud >> 2 * rows)
+        | (diagonal_du & diagonal_du >> 2 * (rows + 2))
         != 0
     }
 
