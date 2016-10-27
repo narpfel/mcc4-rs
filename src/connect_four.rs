@@ -338,7 +338,7 @@ impl State for BitState {
             Ok(
                 BitState {
                     state: [BitBoard(0), BitBoard(0)],
-                    empty_per_column: [rows as u8 - 1; 12],
+                    empty_per_column: [rows as u8; 12],
                     columns: columns as u8,
                     rows: rows as u8,
                     // last_move: (0, 0),
@@ -355,7 +355,7 @@ impl State for BitState {
 
     fn play(&mut self, column: usize, player: Player) -> Result<(), InvalidMove> {
         try!(self.validate_move(column));
-        let row = self.empty_per_column[column] as usize;
+        let row = self.empty_per_column[column] as usize - 1;
         self.set(column, row, player);
         self.empty_per_column[column] -= 1;
         self.last_player = player;
