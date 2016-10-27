@@ -7,4 +7,4 @@ authors = ["Paul Gey <narpfel@gmx.de>"]
 lto = true
 
 [dependencies]
-rand = "0.3"
+rand = "0"
