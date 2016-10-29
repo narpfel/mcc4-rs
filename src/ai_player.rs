@@ -62,8 +62,9 @@ impl<'a, G: Game + 'static> PlayerTrait for AiPlayer<'a, G> {
                     let mut game = initial_game.clone();
                     let mut valid_moves = Vec::new();
                     score += match simulate_game(&mut rng, &mut game, &mut valid_moves) {
-                        Some(player) => if player == me { 2 } else { -2 },
-                        _ => 1
+                        Some(player) if player == me => 2,
+                        Some(_) => -2,
+                        _ => 1,
                     };
                 }
                 tx.send((column, score)).unwrap();
