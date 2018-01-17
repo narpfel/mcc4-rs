@@ -6,5 +6,9 @@ authors = ["Paul Gey <narpfel@gmx.de>"]
 [profile.release]
 lto = true
 
+[features]
+noparallel = []
+
 [dependencies]
 rand = "0"
+rayon = "0.9"

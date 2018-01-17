@@ -1,4 +1,6 @@
 extern crate rand;
+#[cfg(not(feature = "noparallel"))]
+extern crate rayon;
 
 use std::io;
 use std::io::prelude::*;

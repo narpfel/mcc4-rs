@@ -1,8 +1,14 @@
 use std::cell::RefCell;
+#[cfg(feature = "noparallel")]
 use std::iter::repeat;
 use std::marker::PhantomData;
 
 use rand::{Rng, XorShiftRng, weak_rng};
+
+#[cfg(not(feature = "noparallel"))]
+use rayon::prelude::*;
+#[cfg(not(feature = "noparallel"))]
+use rayon::iter::{repeatn};
 
 use super::*;
 
@@ -24,7 +30,29 @@ impl<G: Game> AiPlayer<G> {
 }
 
 impl<G: Game> AiPlayer<G> {
+    #[cfg(not(feature = "noparallel"))]
+    fn simulate(&self, original_game: &G) -> Vec<(G::Move, i64)> {
+        let me = original_game.current_player();
 
+        original_game.valid_moves()
+            .into_par_iter()
+            .map_with(original_game.clone(), |ref mut initial_game, column| {
+                initial_game.play(column).unwrap();
+                let score = repeatn(initial_game.clone(), SIMULATIONS)
+                    .map(|ref mut game| {
+                        match simulate_game(game) {
+                            Some(player) if player == me => 2,
+                            Some(_) => -2,
+                            _ => 1,
+                        }
+                    })
+                    .sum();
+                (column, score)
+            })
+            .collect()
+    }
+
+    #[cfg(feature = "noparallel")]
     fn simulate(&self, original_game: &G) -> Vec<(G::Move, i64)> {
         let me = original_game.current_player();
 
