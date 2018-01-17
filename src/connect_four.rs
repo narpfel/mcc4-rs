@@ -14,7 +14,7 @@ impl<S: State> ConnectFour<S> {
         Ok(
             ConnectFour {
                 current_player: Player(1),
-                state: try!(S::new(columns, rows)),
+                state: S::new(columns, rows)?,
                 winner: None,
             }
         )
@@ -38,7 +38,7 @@ impl<S: State> Game for ConnectFour<S> {
 
     fn play(&mut self, column_number: Self::Move) -> Result<Option<Player>, InvalidMove> {
         let player = self.current_player();
-        try!(self.state.play(column_number, player));
+        self.state.play(column_number, player)?;
         self.next_player();
         if self.state.has_just_won() {
             self.winner = Some(player);
@@ -106,7 +106,7 @@ pub trait State : fmt::Display + Clone + Send + Sync {
 
 
     fn play(&mut self, column_number: usize, player: Player) -> Result<(), InvalidMove> {
-        try!(self.validate_move(column_number));
+        self.validate_move(column_number)?;
         let max_row = self.size().1;
 
         let mut row = 0;
@@ -261,12 +261,12 @@ pub trait State : fmt::Display + Clone + Send + Sync {
             format!("│{}│\n", positions.join("│"))
         }).collect();
 
-        try!(write!(
+        write!(
             f, "{top_row}{body}{bottom_row}",
             top_row = fill_row("┌", "┬", "┐\n"),
             body = rows.join(&fill_row("├", "┼", "┤\n")),
             bottom_row = fill_row("└", "┴", "┘\n")
-        ));
+        )?;
         write!(f, " {}\n", (0..n_columns).map(|n| format!("{}", n)).collect::<Vec<_>>().join(" "))
     }
 }
@@ -354,7 +354,7 @@ impl State for BitState {
     }
 
     fn play(&mut self, column: usize, player: Player) -> Result<(), InvalidMove> {
-        try!(self.validate_move(column));
+        self.validate_move(column)?;
         let row = self.empty_per_column[column] as usize - 1;
         self.set(column, row, player);
         self.empty_per_column[column] -= 1;
