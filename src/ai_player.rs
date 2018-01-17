@@ -97,10 +97,27 @@ pub fn simulate_game<G: Game>(game: &mut G) -> Option<Player> {
                 return None;
             }
             else {
-                if let Some(winner) = game.play(*rng.choose(&valid_moves).unwrap()).unwrap() {
+                if let Some(winner) = game.play(*choose(&mut *rng, &valid_moves)).unwrap() {
                     return Some(winner);
                 }
             }
         }
     })
+}
+
+fn choose<'a, R: Rng, T>(rng: &mut R, ts: &'a [T]) -> &'a T {
+    &ts[rand_in_range(ts.len(), rng)]
+}
+
+/// Generate a random `r: usize` that satisfies `0 <= r < upper`.
+///
+/// The algorithm implemented in this function performs significantly better than the standard
+/// modulo reduction algorithm, because it avoids the costly division operation.
+/// It is not unbiased, but its bias is insignificant.
+///
+/// This algorithm was adapted from a C implementation given by Daniel Lemire in his blog:
+/// https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
+fn rand_in_range<R: Rng>(upper: usize, rng: &mut R) -> usize {
+    let random = rng.next_u32() as usize;
+    (upper * random) >> 32
 }
