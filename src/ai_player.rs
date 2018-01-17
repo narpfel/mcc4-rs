@@ -1,99 +1,78 @@
+use std::cell::RefCell;
+use std::iter::repeat;
 use std::marker::PhantomData;
-use std::thread;
-use std::sync::mpsc;
 
-use rand::{StdRng, Rng, SeedableRng};
+use rand::{Rng, XorShiftRng, weak_rng};
 
 use super::*;
 
 pub const SIMULATIONS: usize = 100_000;
 
 
-#[derive(Clone, Copy)]
-pub struct AiPlayer<'a, G: Game> {
-    seed: Option<&'a [usize]>,
+#[derive(Copy, Clone)]
+pub struct AiPlayer<G: Game> {
     _game: PhantomData<G>,
 }
 
 
-impl<'a, G: Game> AiPlayer<'a, G> {
-    pub fn new() -> AiPlayer<'a, G> {
+impl<G: Game> AiPlayer<G> {
+    pub fn new() -> AiPlayer<G> {
         AiPlayer {
-            seed: None,
-            _game: Default::default(),
-        }
-    }
-
-    pub fn with_seed(seed: &'a [usize]) -> AiPlayer<'a, G> {
-        AiPlayer {
-            seed: Some(seed),
-            _game: Default::default(),
-        }
-    }
-
-    fn new_rng(&self) -> StdRng {
-        match self.seed {
-            Some(seed) => StdRng::from_seed(seed),
-            None => StdRng::new().expect(
-                "Could not create random number generator, not enough entropy"
-            ),
+            _game: PhantomData,
         }
     }
 }
 
+impl<G: Game> AiPlayer<G> {
 
-impl<'a, G: Game + 'static> PlayerTrait for AiPlayer<'a, G> {
+    fn simulate(&self, original_game: &G) -> Vec<(G::Move, i64)> {
+        let me = original_game.current_player();
+
+        original_game.valid_moves()
+            .into_iter()
+            .map(|column| {
+                let mut initial_game = original_game.clone();
+                initial_game.play(column).unwrap();
+                let score = repeat(initial_game.clone()).take(SIMULATIONS)
+                    .map(|ref mut game| {
+                        match simulate_game(game) {
+                            Some(player) if player == me => 2,
+                            Some(_) => -2,
+                            _ => 1,
+                        }
+                    })
+                    .sum();
+                (column, score)
+            })
+            .collect()
+    }
+}
+
+impl<G: Game + 'static> PlayerTrait for AiPlayer<G> {
     type Game = G;
 
     fn make_move(&self, original_game: &G) -> G::Move {
-        let me = original_game.current_player();
-        let valid_moves = original_game.valid_moves();
-
-        let (tx, rx) = mpsc::channel();
-        for column in &valid_moves {
-            let (mut initial_game, tx) = (original_game.clone(), tx.clone());
-            let column = *column;
-            let mut rng = self.new_rng();
-
-            initial_game.play(column).unwrap();
-            thread::spawn(move || {
-                let mut score = 0;
-                for _ in 0..SIMULATIONS {
-                    let mut game = initial_game.clone();
-                    let mut valid_moves = Vec::new();
-                    score += match simulate_game(&mut rng, &mut game, &mut valid_moves) {
-                        Some(player) if player == me => 2,
-                        Some(_) => -2,
-                        _ => 1,
-                    };
-                }
-                tx.send((column, score)).unwrap();
-            });
-        }
-
-        let mut scores = Vec::with_capacity(valid_moves.len());
-        for _ in &valid_moves {
-            let (column, score) = rx.recv().unwrap();
-            scores.push((column, score));
-        }
-
-        scores.into_iter().max_by_key(|&(_, score)| score).unwrap().0
+        self.simulate(original_game).into_iter().max_by_key(|&(_, score)| score).unwrap().0
     }
 }
 
+pub fn simulate_game<G: Game>(game: &mut G) -> Option<Player> {
+    thread_local!(static RNG: RefCell<XorShiftRng> = RefCell::new(weak_rng()));
 
-pub fn simulate_game<R: Rng, G: Game>(
-    rng: &mut R,
-    game: &mut G,
-    valid_moves: &mut Vec<<G as Game>::Move>
-) -> Option<Player> {
-    loop {
-        game.valid_moves_fast(valid_moves);
-        if valid_moves.is_empty() {
-            return None;
+    RNG.with(|rng| {
+        let mut rng = rng.borrow_mut();
+
+        let mut valid_moves = vec![];
+        loop {
+            game.valid_moves_fast(&mut valid_moves);
+            if valid_moves.is_empty() {
+                return None;
+            }
+            else {
+                if let Some(winner) = game.play(*rng.choose(&valid_moves).unwrap()).unwrap() {
+                    return Some(winner);
+                }
+            }
         }
-        if let Some(winner) = game.play(*rng.choose(&valid_moves).unwrap()).unwrap() {
-            return Some(winner);
-        }
-    }
+    })
 }

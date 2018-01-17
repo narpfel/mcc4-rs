@@ -9,8 +9,7 @@ use mcc4::ai_player::SIMULATIONS;
 fn main() {
     let columns = 7;
     let game = ConnectFour::<BitState>::new(columns, 6).unwrap();
-    let seed = [1, 2, 3, 42];
-    let benchmark_player = AiPlayer::with_seed(&seed);
+    let benchmark_player = AiPlayer::new();
     let now = Instant::now();
     benchmark_player.make_move(&game);
     let time = now.elapsed();
