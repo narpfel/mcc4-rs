@@ -9,7 +9,7 @@ use mcc4::*;
 fn main() {
     let game = ConnectFour::<BitState>::new(7, 6).unwrap();
     let human_player = HumanPlayer::new();
-    let ai_player = AiPlayer::new();
+    let ai_player = MonteCarloPlayer::new();
     let mut players: Vec<Box<PlayerTrait<Game=_>>> = vec![Box::new(human_player), Box::new(ai_player)];
     rand::thread_rng().shuffle(&mut players);
 

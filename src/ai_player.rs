@@ -16,20 +16,23 @@ pub const SIMULATIONS: usize = 100_000;
 
 
 #[derive(Copy, Clone)]
-pub struct AiPlayer<G: Game> {
+pub struct MonteCarloPlayer<G: Game> {
     _game: PhantomData<G>,
 }
 
-
-impl<G: Game> AiPlayer<G> {
-    pub fn new() -> AiPlayer<G> {
-        AiPlayer {
+impl<G: Game> Default for MonteCarloPlayer<G> {
+    fn default() -> MonteCarloPlayer<G> {
+        MonteCarloPlayer {
             _game: PhantomData,
         }
     }
 }
 
-impl<G: Game> AiPlayer<G> {
+impl<G: Game> MonteCarloPlayer<G> {
+    pub fn new() -> MonteCarloPlayer<G> {
+        Self::default()
+    }
+
     #[cfg(not(feature = "noparallel"))]
     fn simulate(&self, original_game: &G) -> Vec<(G::Move, i64)> {
         let me = original_game.current_player();
@@ -76,7 +79,7 @@ impl<G: Game> AiPlayer<G> {
     }
 }
 
-impl<G: Game + 'static> PlayerTrait for AiPlayer<G> {
+impl<G: Game + 'static> PlayerTrait for MonteCarloPlayer<G> {
     type Game = G;
 
     fn make_move(&self, original_game: &G) -> G::Move {

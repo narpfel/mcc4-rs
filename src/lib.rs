@@ -10,7 +10,7 @@ pub mod ai_player;
 pub mod connect_four;
 mod game;
 
-pub use ai_player::AiPlayer;
+pub use ai_player::MonteCarloPlayer;
 pub use game::{Game, Player, Winner};
 pub use connect_four::*;
 
@@ -83,7 +83,7 @@ impl<G: Game + 'static> PlayerTrait for AiAidedPlayer<G> {
     type Game = G;
 
     fn make_move(&self, game: &G) -> G::Move {
-        println!("The AI would choose column {}.", AiPlayer::new().make_move(game));
+        println!("The AI would choose column {}.", MonteCarloPlayer::default().make_move(game));
         HumanPlayer::new().make_move(game)
     }
 }
