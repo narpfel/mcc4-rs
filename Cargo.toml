@@ -12,4 +12,3 @@ noparallel = []
 
 [dependencies]
 rand = "0.4"
-rayon = "1"
