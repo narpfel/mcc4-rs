@@ -1,5 +1,3 @@
-extern crate mcc4;
-
 use std::time::{Instant, Duration};
 
 use mcc4::*;

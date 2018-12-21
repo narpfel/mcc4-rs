@@ -1,5 +1,3 @@
-extern crate mcc4;
-
 use mcc4::*;
 
 

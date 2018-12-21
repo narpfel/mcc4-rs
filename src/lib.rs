@@ -1,7 +1,3 @@
-extern crate rand;
-#[cfg(not(feature = "noparallel"))]
-extern crate rayon;
-
 use std::io;
 use std::io::prelude::*;
 use std::marker::PhantomData;
@@ -10,9 +6,9 @@ pub mod ai_player;
 pub mod connect_four;
 mod game;
 
-pub use ai_player::MonteCarloPlayer;
-pub use game::{Game, Player, Winner};
-pub use connect_four::*;
+pub use crate::ai_player::MonteCarloPlayer;
+pub use crate::game::{Game, Player, Winner};
+pub use crate::connect_four::*;
 
 
 pub trait PlayerTrait {

@@ -1,7 +1,3 @@
-extern crate rand;
-
-extern crate mcc4;
-
 use rand::Rng;
 
 use mcc4::*;

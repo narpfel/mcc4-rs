@@ -2,6 +2,7 @@
 name = "mcc4"
 version = "0.1.0"
 authors = ["Paul Gey <narpfel@gmx.de>"]
+edition = "2018"
 
 [profile.release]
 lto = true
