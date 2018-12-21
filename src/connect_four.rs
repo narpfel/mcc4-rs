@@ -104,7 +104,6 @@ pub trait State : fmt::Display + Clone + Send + Sync {
         )
     }
 
-
     fn play(&mut self, column_number: usize, player: Player) -> Result<(), InvalidMove> {
         self.validate_move(column_number)?;
         let max_row = self.size().1;
@@ -379,6 +378,7 @@ impl State for BitState {
         )
     }
 
+    #[inline(always)]
     fn valid_moves_fast(&self, valid_moves: &mut Vec<usize>) {
         valid_moves.clear();
         self.empty_per_column[..self.columns as usize].iter()
@@ -403,7 +403,7 @@ impl fmt::Display for BitState {
 pub struct BitBoard(u64);
 
 impl BitBoard {
-    #[inline]
+    #[inline(always)]
     fn has_winner(&self, rows: u8) -> bool {
         let x = self.0;
         let vertical = x & x >> 1;
