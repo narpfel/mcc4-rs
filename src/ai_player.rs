@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 #[cfg(feature = "noparallel")]
 use std::iter::repeat;
-use std::marker::PhantomData;
 
 use rand::{Rng, XorShiftRng, weak_rng};
 
@@ -12,29 +11,27 @@ use rayon::iter::{repeatn};
 
 use super::*;
 
-pub const SIMULATIONS: usize = 100_000;
+use crate::connect_four::Move;
+
+pub const SIMULATIONS: usize = 3__000_000;
 
 
 #[derive(Copy, Clone)]
-pub struct MonteCarloPlayer<G: Game> {
-    _game: PhantomData<G>,
-}
+pub struct MonteCarloPlayer;
 
-impl<G: Game> Default for MonteCarloPlayer<G> {
-    fn default() -> MonteCarloPlayer<G> {
-        MonteCarloPlayer {
-            _game: PhantomData,
-        }
+impl Default for MonteCarloPlayer {
+    fn default() -> MonteCarloPlayer {
+        MonteCarloPlayer
     }
 }
 
-impl<G: Game> MonteCarloPlayer<G> {
-    pub fn new() -> MonteCarloPlayer<G> {
+impl MonteCarloPlayer {
+    pub fn new() -> MonteCarloPlayer {
         Self::default()
     }
 
     #[cfg(not(feature = "noparallel"))]
-    fn simulate(&self, original_game: &G) -> Vec<(G::Move, i64)> {
+    fn simulate(&self, original_game: &ConnectFour) -> Vec<(Move, i64)> {
         let me = original_game.current_player();
 
         original_game.valid_moves()
@@ -56,7 +53,7 @@ impl<G: Game> MonteCarloPlayer<G> {
     }
 
     #[cfg(feature = "noparallel")]
-    fn simulate(&self, original_game: &G) -> Vec<(G::Move, i64)> {
+    fn simulate(&self, original_game: &ConnectFour) -> Vec<(Move, i64)> {
         let me = original_game.current_player();
 
         original_game.valid_moves()
@@ -77,17 +74,15 @@ impl<G: Game> MonteCarloPlayer<G> {
             })
             .collect()
     }
-}
 
-impl<G: Game + 'static> PlayerTrait for MonteCarloPlayer<G> {
-    type Game = G;
-
-    fn make_move(&self, original_game: &G) -> G::Move {
+    pub fn make_move(&self, original_game: &ConnectFour) -> Move {
         self.simulate(original_game).into_iter().max_by_key(|&(_, score)| score).unwrap().0
     }
+
+    pub fn invalid_move(&self, _: InvalidMove) { }
 }
 
-pub fn simulate_game<G: Game>(game: &mut G) -> Option<Player> {
+pub fn simulate_game(game: &mut ConnectFour) -> Option<Player> {
     thread_local!(static RNG: RefCell<XorShiftRng> = RefCell::new(weak_rng()));
 
     RNG.with(|rng| {

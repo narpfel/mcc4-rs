@@ -3,10 +3,10 @@ use rand::Rng;
 use mcc4::*;
 
 fn main() {
-    let game = ConnectFour::<BitState>::new(7, 6).unwrap();
-    let human_player = HumanPlayer::new();
+    let game = ConnectFour::new(7, 6).unwrap();
+    let human_player = MonteCarloPlayer::new();
     let ai_player = MonteCarloPlayer::new();
-    let mut players: Vec<Box<PlayerTrait<Game=_>>> = vec![Box::new(human_player), Box::new(ai_player)];
+    let mut players: Vec<MonteCarloPlayer> = vec![human_player, ai_player];
     rand::thread_rng().shuffle(&mut players);
 
     println!("\x1B[2J\x1B[H");

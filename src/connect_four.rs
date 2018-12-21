@@ -1,23 +1,21 @@
 use std::fmt;
 
-use super::{Game, Player};
+use crate::ai_player::MonteCarloPlayer;
 
 #[derive(Debug, Clone)]
-pub struct ConnectFour<S: State> {
-    state: S,
+pub struct ConnectFour {
+    state: BitState,
     current_player: Player,
     winner: Option<Player>,
 }
 
-impl<S: State> ConnectFour<S> {
-    pub fn new(columns: usize, rows: usize) -> Result<ConnectFour<S>, ()> {
-        Ok(
-            ConnectFour {
-                current_player: Player(1),
-                state: S::new(columns, rows)?,
-                winner: None,
-            }
-        )
+impl ConnectFour {
+    pub fn new(columns: usize, rows: usize) -> Result<ConnectFour, ()> {
+        Ok(ConnectFour {
+            current_player: Player(1),
+            state: BitState::new(columns, rows)?,
+            winner: None,
+        })
     }
 
     pub fn size(&self) -> (usize, usize) {
@@ -29,14 +27,87 @@ impl<S: State> ConnectFour<S> {
         let Player(p) = self.current_player();
         Player(3 - p)
     }
+
+    fn has_ended(&self) -> bool {
+        self.valid_moves().is_empty() || self.winner().is_some()
+    }
+
+    pub fn iter(self, players: Vec<MonteCarloPlayer>) -> Moves {
+        Moves::new(self, players)
+    }
 }
 
-impl<S: State> Game for ConnectFour<S> {
-    type State = S;
-    type Move = usize;
-    type InvalidMove = InvalidMove;
+pub struct Moves {
+    game: ConnectFour,
+    players: Vec<MonteCarloPlayer>,
+    current_player_index: usize,
+}
 
-    fn play(&mut self, column_number: Self::Move) -> Result<Option<Player>, InvalidMove> {
+impl Moves {
+    fn new(game: ConnectFour, players: Vec<MonteCarloPlayer>) -> Moves {
+        Moves {
+            game: game,
+            players: players,
+            current_player_index: 0,
+        }
+    }
+}
+
+impl Iterator for Moves {
+    type Item = (BitState, Player, Move, Winner);
+
+    #[inline(always)]
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.game.has_ended() || self.game.valid_moves().is_empty() {
+            return None;
+        }
+
+        let num_players = self.players.len();
+        let player = self.game.current_player();
+
+        loop {
+            let move_ = self.players[self.current_player_index].make_move(&self.game);
+            match self.game.play(move_) {
+                Ok(maybe_winner) => {
+                    self.current_player_index = (self.current_player_index + 1) % num_players;
+                    let winner = match maybe_winner {
+                        Some(winner) => Winner::Winner(winner),
+                        None => if self.game.has_ended() { Winner::Draw } else { Winner::NotFinishedYet }
+                    };
+                    return Some((self.game.state().clone(), player, move_, winner));
+                },
+                Err(invalid_move) => {
+                    self.players[self.current_player_index].invalid_move(invalid_move);
+                }
+            }
+        }
+    }
+}
+
+pub type Move = usize;
+
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+pub struct Player(pub u8);
+
+impl fmt::Display for Player {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(
+            f, "{}\x1B[0m",
+            if self.0 == 1 { "\x1B[44;1mX" } else if self.0 == 2 { "\x1B[41;1mO" } else { " " }
+        )
+    }
+}
+
+
+#[derive(Debug)]
+pub enum Winner {
+    Winner(Player),
+    Draw,
+    NotFinishedYet,
+}
+
+impl ConnectFour {
+    pub fn play(&mut self, column_number: Move) -> Result<Option<Player>, InvalidMove> {
         let player = self.current_player();
         self.state.play(column_number, player)?;
         self.next_player();
@@ -53,19 +124,19 @@ impl<S: State> Game for ConnectFour<S> {
         self.winner
     }
 
-    fn valid_moves(&self) -> Vec<Self::Move> {
+    pub fn valid_moves(&self) -> Vec<Move> {
         self.state.valid_moves()
     }
 
-    fn valid_moves_fast(&self, valid_moves: &mut Vec<Self::Move>) {
+    pub fn valid_moves_fast(&self, valid_moves: &mut Vec<Move>) {
         self.state.valid_moves_fast(valid_moves);
     }
 
-    fn state(&self) -> &S {
+    pub fn state(&self) -> &BitState {
         &self.state
     }
 
-    fn current_player(&self) -> Player {
+    pub fn current_player(&self) -> Player {
         self.current_player
     }
 

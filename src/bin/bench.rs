@@ -15,7 +15,7 @@ fn as_fractional_secs(duration: Duration) -> f64 {
 
 fn main() {
     let columns = 7;
-    let game = ConnectFour::<BitState>::new(columns, 6).unwrap();
+    let game = ConnectFour::new(columns, 6).unwrap();
     let benchmark_player = MonteCarloPlayer::new();
     let now = Instant::now();
     benchmark_player.make_move(&game);
