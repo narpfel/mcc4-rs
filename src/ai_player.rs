@@ -13,21 +13,11 @@ pub const SIMULATIONS: usize = 1_000_000;
 #[derive(Copy, Clone)]
 pub struct MonteCarloPlayer;
 
-impl Default for MonteCarloPlayer {
-    fn default() -> MonteCarloPlayer {
-        MonteCarloPlayer
-    }
-}
-
 impl MonteCarloPlayer {
-    pub fn new() -> MonteCarloPlayer {
-        Self::default()
-    }
-
     fn simulate(&self, original_game: &ConnectFour) -> Vec<(Move, i64)> {
-        let me = original_game.current_player();
+        let me = original_game.current_player;
 
-        original_game.valid_moves()
+        original_game.state.valid_moves()
             .into_iter()
             .map(|column| {
                 let mut initial_game = original_game.clone();
@@ -49,8 +39,6 @@ impl MonteCarloPlayer {
     pub fn make_move(&self, original_game: &ConnectFour) -> Move {
         self.simulate(original_game).into_iter().max_by_key(|&(_, score)| score).unwrap().0
     }
-
-    pub fn invalid_move(&self, _: InvalidMove) { }
 }
 
 pub fn simulate_game(game: &mut ConnectFour) -> Option<Player> {
@@ -61,7 +49,7 @@ pub fn simulate_game(game: &mut ConnectFour) -> Option<Player> {
 
         let mut valid_moves = vec![];
         loop {
-            game.valid_moves_fast(&mut valid_moves);
+            game.state.valid_moves_fast(&mut valid_moves);
             if valid_moves.is_empty() {
                 return None;
             }

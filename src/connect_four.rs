@@ -1,8 +1,8 @@
 #[derive(Debug, Clone)]
 pub struct ConnectFour {
-    state: BitState,
-    current_player: Player,
-    winner: Option<Player>,
+    pub state: BitState,
+    pub current_player: Player,
+    pub winner: Option<Player>,
 }
 
 impl ConnectFour {
@@ -15,7 +15,7 @@ impl ConnectFour {
     }
 
     pub fn play(&mut self, column_number: Move) -> Result<Option<Player>, InvalidMove> {
-        let player = self.current_player();
+        let player = self.current_player;
         self.state.play(column_number, player)?;
         self.next_player();
         if self.state.has_just_won() {
@@ -27,33 +27,12 @@ impl ConnectFour {
         }
     }
 
-    pub fn valid_moves(&self) -> Vec<Move> {
-        self.state.valid_moves()
-    }
-
-    pub fn valid_moves_fast(&self, valid_moves: &mut Vec<Move>) {
-        self.state.valid_moves_fast(valid_moves);
-    }
-
-    pub fn state(&self) -> &BitState {
-        &self.state
-    }
-
-    pub fn current_player(&self) -> Player {
-        self.current_player
-    }
-
     fn next_player(&mut self) {
         self.current_player = self.other_player();
     }
 
-    pub fn size(&self) -> (usize, usize) {
-        self.state.size()
-    }
-
-    // Not in trait, because it assumes two players.
     pub fn other_player(&self) -> Player {
-        let Player(p) = self.current_player();
+        let Player(p) = self.current_player;
         Player(3 - p)
     }
 }
@@ -132,7 +111,7 @@ impl BitState {
     }
 
     #[inline(always)]
-    fn valid_moves_fast(&self, valid_moves: &mut Vec<usize>) {
+    pub fn valid_moves_fast(&self, valid_moves: &mut Vec<usize>) {
         valid_moves.clear();
         self.empty_per_column[..self.columns as usize].iter()
             .enumerate()
@@ -140,7 +119,7 @@ impl BitState {
             .for_each(|(i, _)| valid_moves.push(i));
     }
 
-    fn valid_moves(&self) -> Vec<usize> {
+    pub fn valid_moves(&self) -> Vec<usize> {
         let columns = self.size().0;
         let mut moves = Vec::with_capacity(columns);
         self.valid_moves_fast(&mut moves);
