@@ -2,7 +2,7 @@ use std::iter::repeat;
 
 use super::*;
 
-use crate::connect_four::Move;
+use ::connect_four::Move;
 
 pub const SIMULATIONS: usize = 1_000_000;
 
@@ -72,7 +72,7 @@ fn rand_in_range(upper: usize, rng: &mut XorShiftRng) -> usize {
     (upper * random) >> 32
 }
 
-use core::num::Wrapping as w;
+use std::num::Wrapping as w;
 
 #[derive(Clone)]
 pub struct XorShiftRng {

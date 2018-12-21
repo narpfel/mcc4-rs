@@ -1,5 +1,5 @@
 use std::time::{Instant, Duration};
-
+extern crate mcc4;
 use mcc4::*;
 use mcc4::ai_player::SIMULATIONS;
 
