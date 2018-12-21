@@ -18,6 +18,43 @@ impl ConnectFour {
         })
     }
 
+    pub fn play(&mut self, column_number: Move) -> Result<Option<Player>, InvalidMove> {
+        let player = self.current_player();
+        self.state.play(column_number, player)?;
+        self.next_player();
+        if self.state.has_just_won() {
+            self.winner = Some(player);
+            Ok(self.winner)
+        }
+        else {
+            Ok(None)
+        }
+    }
+
+    fn winner(&self) -> Option<Player> {
+        self.winner
+    }
+
+    pub fn valid_moves(&self) -> Vec<Move> {
+        self.state.valid_moves()
+    }
+
+    pub fn valid_moves_fast(&self, valid_moves: &mut Vec<Move>) {
+        self.state.valid_moves_fast(valid_moves);
+    }
+
+    pub fn state(&self) -> &BitState {
+        &self.state
+    }
+
+    pub fn current_player(&self) -> Player {
+        self.current_player
+    }
+
+    fn next_player(&mut self) {
+        self.current_player = self.other_player();
+    }
+
     pub fn size(&self) -> (usize, usize) {
         self.state.size()
     }
@@ -104,45 +141,6 @@ pub enum Winner {
     Winner(Player),
     Draw,
     NotFinishedYet,
-}
-
-impl ConnectFour {
-    pub fn play(&mut self, column_number: Move) -> Result<Option<Player>, InvalidMove> {
-        let player = self.current_player();
-        self.state.play(column_number, player)?;
-        self.next_player();
-        if self.state.has_just_won() {
-            self.winner = Some(player);
-            Ok(self.winner)
-        }
-        else {
-            Ok(None)
-        }
-    }
-
-    fn winner(&self) -> Option<Player> {
-        self.winner
-    }
-
-    pub fn valid_moves(&self) -> Vec<Move> {
-        self.state.valid_moves()
-    }
-
-    pub fn valid_moves_fast(&self, valid_moves: &mut Vec<Move>) {
-        self.state.valid_moves_fast(valid_moves);
-    }
-
-    pub fn state(&self) -> &BitState {
-        &self.state
-    }
-
-    pub fn current_player(&self) -> Player {
-        self.current_player
-    }
-
-    fn next_player(&mut self) {
-        self.current_player = self.other_player();
-    }
 }
 
 #[derive(Clone, Debug)]
