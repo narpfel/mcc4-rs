@@ -11,4 +11,3 @@ lto = true
 noparallel = []
 
 [dependencies]
-rand = "0.4"

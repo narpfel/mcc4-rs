@@ -1,8 +1,6 @@
 use std::cell::RefCell;
 use std::iter::repeat;
 
-use rand::{Rng, XorShiftRng, weak_rng};
-
 use super::*;
 
 use crate::connect_four::Move;
@@ -42,7 +40,7 @@ impl MonteCarloPlayer {
 }
 
 pub fn simulate_game(game: &mut ConnectFour) -> Option<Player> {
-    thread_local!(static RNG: RefCell<XorShiftRng> = RefCell::new(weak_rng()));
+    thread_local!(static RNG: RefCell<XorShiftRng> = RefCell::new(XorShiftRng::from_seed()));
 
     RNG.with(|rng| {
         let mut rng = rng.borrow_mut();
@@ -62,7 +60,7 @@ pub fn simulate_game(game: &mut ConnectFour) -> Option<Player> {
     })
 }
 
-fn choose<'a, R: Rng, T>(rng: &mut R, ts: &'a [T]) -> &'a T {
+fn choose<'a, T>(rng: &mut XorShiftRng, ts: &'a [T]) -> &'a T {
     &ts[rand_in_range(ts.len(), rng)]
 }
 
@@ -74,7 +72,43 @@ fn choose<'a, R: Rng, T>(rng: &mut R, ts: &'a [T]) -> &'a T {
 ///
 /// This algorithm was adapted from a C implementation given by Daniel Lemire in his blog:
 /// https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
-fn rand_in_range<R: Rng>(upper: usize, rng: &mut R) -> usize {
+fn rand_in_range(upper: usize, rng: &mut XorShiftRng) -> usize {
     let random = rng.next_u32() as usize;
     (upper * random) >> 32
+}
+
+use core::num::Wrapping as w;
+
+#[derive(Clone)]
+#[cfg_attr(feature="serde1", derive(Serialize,Deserialize))]
+pub struct XorShiftRng {
+    x: w<u32>,
+    y: w<u32>,
+    z: w<u32>,
+    w: w<u32>,
+}
+
+impl XorShiftRng {
+    #[inline]
+    fn next_u32(&mut self) -> u32 {
+        let x = self.x;
+        let t = x ^ (x << 11);
+        self.x = self.y;
+        self.y = self.z;
+        self.z = self.w;
+        let w_ = self.w;
+        self.w = w_ ^ (w_ >> 19) ^ (t ^ (t >> 8));
+        self.w.0
+    }
+
+    fn from_seed() -> Self {
+        let seed_u32 = [0xBAD_5EED, 0xBAD_5EED, 0xBAD_5EED, 0xBAD_5EED];
+
+        XorShiftRng {
+            x: w(seed_u32[0]),
+            y: w(seed_u32[1]),
+            z: w(seed_u32[2]),
+            w: w(seed_u32[3]),
+        }
+    }
 }
