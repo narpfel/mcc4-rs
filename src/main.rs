@@ -1,24 +1,25 @@
-use rand::Rng;
+use std::time::{Instant, Duration};
 
 use mcc4::*;
+use mcc4::ai_player::SIMULATIONS;
+
+
+pub const NANOS_PER_SECOND: u64 = 1_000_000_000;
+
+
+fn as_fractional_secs(duration: Duration) -> f64 {
+    (duration.as_secs() * NANOS_PER_SECOND + duration.subsec_nanos() as u64) as f64
+        / NANOS_PER_SECOND as f64
+}
+
 
 fn main() {
-    let game = ConnectFour::new(7, 6).unwrap();
-    let human_player = MonteCarloPlayer::new();
-    let ai_player = MonteCarloPlayer::new();
-    let mut players: Vec<MonteCarloPlayer> = vec![human_player, ai_player];
-    rand::thread_rng().shuffle(&mut players);
-
-    println!("\x1B[2J\x1B[H");
-    println!("{}", game.state());
-    for (state, player, move_, winner) in game.iter(players) {
-        print!("\x1B[2J\x1B[H");
-        println!("Player {} has moved {}", player, move_);
-        println!("{}", state);
-        match winner {
-            Winner::Winner(winner) => println!("Player {} has won.", winner),
-            Winner::Draw => println!("Draw."),
-            Winner::NotFinishedYet => {}
-        };
-    }
+    let columns = 7;
+    let game = ConnectFour::new(columns, 6).unwrap();
+    let benchmark_player = MonteCarloPlayer::new();
+    let now = Instant::now();
+    benchmark_player.make_move(&game);
+    let seconds = as_fractional_secs(now.elapsed());
+    println!("{} seconds elapsed", seconds);
+    println!("{:?} games per second", (columns * SIMULATIONS) as f64 / seconds);
 }
