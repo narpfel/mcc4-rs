@@ -1,4 +1,3 @@
-use std::cell::RefCell;
 use std::iter::repeat;
 
 use super::*;
@@ -40,24 +39,20 @@ impl MonteCarloPlayer {
 }
 
 pub fn simulate_game(game: &mut ConnectFour) -> Option<Player> {
-    thread_local!(static RNG: RefCell<XorShiftRng> = RefCell::new(XorShiftRng::from_seed()));
+    let rng = &mut XorShiftRng::from_seed();
 
-    RNG.with(|rng| {
-        let mut rng = rng.borrow_mut();
-
-        let mut valid_moves = vec![];
-        loop {
-            game.state.valid_moves_fast(&mut valid_moves);
-            if valid_moves.is_empty() {
-                return None;
-            }
-            else {
-                if let Some(winner) = game.play(*choose(&mut *rng, &valid_moves)).unwrap() {
-                    return Some(winner);
-                }
+    let mut valid_moves = vec![];
+    loop {
+        game.state.valid_moves_fast(&mut valid_moves);
+        if valid_moves.is_empty() {
+            return None;
+        }
+        else {
+            if let Some(winner) = game.play(*choose(&mut *rng, &valid_moves)).unwrap() {
+                return Some(winner);
             }
         }
-    })
+    }
 }
 
 fn choose<'a, T>(rng: &mut XorShiftRng, ts: &'a [T]) -> &'a T {
@@ -80,7 +75,6 @@ fn rand_in_range(upper: usize, rng: &mut XorShiftRng) -> usize {
 use core::num::Wrapping as w;
 
 #[derive(Clone)]
-#[cfg_attr(feature="serde1", derive(Serialize,Deserialize))]
 pub struct XorShiftRng {
     x: w<u32>,
     y: w<u32>,
