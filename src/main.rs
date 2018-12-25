@@ -1,8 +1,10 @@
 use std::time::{Instant, Duration};
-extern crate mcc4;
-use mcc4::*;
-use mcc4::ai_player::SIMULATIONS;
 
+mod ai_player;
+mod connect_four;
+
+use ai_player::{SIMULATIONS, MonteCarloPlayer};
+use connect_four::{ConnectFour, Player};
 
 pub const NANOS_PER_SECOND: u64 = 1_000_000_000;
 

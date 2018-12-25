@@ -43,13 +43,6 @@ pub type Move = usize;
 pub struct Player(pub u8);
 
 
-#[derive(Debug)]
-pub enum Winner {
-    Winner(Player),
-    Draw,
-    NotFinishedYet,
-}
-
 #[derive(Clone, Debug)]
 pub struct BitState {
     state: [BitBoard; 2],
