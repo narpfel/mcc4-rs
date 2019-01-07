@@ -109,7 +109,7 @@ pub fn simulate_game<G: Game>(game: &mut G) -> Option<Player> {
 }
 
 fn choose<'a, R: Rng, T>(rng: &mut R, ts: &'a [T]) -> &'a T {
-    &ts[rand_in_range(ts.len(), rng)]
+    &ts[rand_in_range(ts.len() as u32, rng) as usize]
 }
 
 /// Generate a random `r: usize` that satisfies `0 <= r < upper`.
@@ -120,7 +120,7 @@ fn choose<'a, R: Rng, T>(rng: &mut R, ts: &'a [T]) -> &'a T {
 ///
 /// This algorithm was adapted from a C implementation given by Daniel Lemire in his blog:
 /// https://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
-fn rand_in_range<R: Rng>(upper: usize, rng: &mut R) -> usize {
-    let random = rng.next_u32() as usize;
-    (upper * random) >> 32
+fn rand_in_range<R: Rng>(upper: u32, rng: &mut R) -> u32 {
+    let random = rng.next_u32() as u64;
+    ((upper as u64 * random) >> 32) as u32
 }
