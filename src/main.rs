@@ -3,6 +3,7 @@ use rand::{thread_rng, seq::SliceRandom};
 use mcc4::*;
 
 fn main() {
+    env_logger::init();
     let game = ConnectFour::<BitState>::new(7, 6).unwrap();
     let human_player = HumanPlayer::new();
     let ai_player = MonteCarloPlayer::new();
