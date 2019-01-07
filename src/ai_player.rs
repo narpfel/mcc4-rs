@@ -3,7 +3,9 @@ use std::cell::RefCell;
 use std::iter::repeat;
 use std::marker::PhantomData;
 
-use rand::{Rng, XorShiftRng, weak_rng};
+use rand::{Rng, RngCore, SeedableRng};
+use rand_os::OsRng;
+use rand_xoshiro::Xoshiro256StarStar;
 
 #[cfg(not(feature = "noparallel"))]
 use rayon::prelude::*;
@@ -88,7 +90,7 @@ impl<G: Game + 'static> PlayerTrait for MonteCarloPlayer<G> {
 }
 
 pub fn simulate_game<G: Game>(game: &mut G) -> Option<Player> {
-    thread_local!(static RNG: RefCell<XorShiftRng> = RefCell::new(weak_rng()));
+    thread_local!(static RNG: RefCell<Xoshiro256StarStar> = RefCell::new(new_rng()));
 
     RNG.with(|rng| {
         let mut rng = rng.borrow_mut();
@@ -123,4 +125,8 @@ fn choose<'a, R: Rng, T>(rng: &mut R, ts: &'a [T]) -> &'a T {
 fn rand_in_range<R: Rng>(upper: u32, rng: &mut R) -> u32 {
     let random = rng.next_u32() as u64;
     ((upper as u64 * random) >> 32) as u32
+}
+
+fn new_rng() -> Xoshiro256StarStar {
+    Xoshiro256StarStar::seed_from_u64(OsRng::new().unwrap().next_u64())
 }

@@ -11,5 +11,7 @@ lto = true
 noparallel = []
 
 [dependencies]
-rand = "0.4"
 rayon = "1"
+rand = "0.6"
+rand_xoshiro = "0.1"
+rand_os = "0.1"
