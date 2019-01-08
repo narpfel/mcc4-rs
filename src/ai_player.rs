@@ -132,5 +132,9 @@ fn rand_in_range<R: Rng>(upper: u32, rng: &mut R) -> u32 {
 }
 
 fn new_rng() -> Xoshiro256StarStar {
-    Xoshiro256StarStar::seed_from_u64(OsRng::new().unwrap().next_u64())
+    Xoshiro256StarStar::seed_from_u64(
+        OsRng::new()
+        .expect("could not gather entropy from the system")
+        .next_u64()
+    )
 }
