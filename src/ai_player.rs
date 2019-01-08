@@ -44,7 +44,7 @@ impl<G: Game> MonteCarloPlayer<G> {
             .map_with(original_game.clone(), |ref mut initial_game, column| {
                 initial_game.play(column).unwrap();
                 let score = repeatn(initial_game.clone(), SIMULATIONS)
-                    .map(|ref mut game| {
+                    .map(|game| {
                         match simulate_game(game) {
                             Some(player) if player == me => 2,
                             Some(_) => -2,
@@ -67,7 +67,7 @@ impl<G: Game> MonteCarloPlayer<G> {
                 let mut initial_game = original_game.clone();
                 initial_game.play(column).unwrap();
                 let score = repeat(initial_game.clone()).take(SIMULATIONS)
-                    .map(|ref mut game| {
+                    .map(|game| {
                         match simulate_game(game) {
                             Some(player) if player == me => 2,
                             Some(_) => -2,
@@ -89,25 +89,29 @@ impl<G: Game + 'static> PlayerTrait for MonteCarloPlayer<G> {
     }
 }
 
-pub fn simulate_game<G: Game>(game: &mut G) -> Option<Player> {
+pub fn simulate_game(game: impl Game) -> Option<Player> {
     thread_local!(static RNG: RefCell<Xoshiro256StarStar> = RefCell::new(new_rng()));
 
     RNG.with(|rng| {
         let mut rng = rng.borrow_mut();
 
-        let mut valid_moves = vec![];
-        loop {
-            game.valid_moves_fast(&mut valid_moves);
-            if valid_moves.is_empty() {
-                return None;
-            }
-            else {
-                if let Some(winner) = game.play(*choose(&mut *rng, &valid_moves)).unwrap() {
-                    return Some(winner);
-                }
+        random_playout(&mut *rng, game)
+    })
+}
+
+fn random_playout(rng: &mut impl Rng, mut game: impl Game) -> Option<Player> {
+    let mut valid_moves = vec![];
+    loop {
+        game.valid_moves_fast(&mut valid_moves);
+        if valid_moves.is_empty() {
+            return None;
+        }
+        else {
+            if let Some(winner) = game.play(*choose(rng, &valid_moves)).unwrap() {
+                return Some(winner);
             }
         }
-    })
+    }
 }
 
 fn choose<'a, R: Rng, T>(rng: &mut R, ts: &'a [T]) -> &'a T {
