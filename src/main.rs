@@ -6,7 +6,7 @@ fn main() {
     env_logger::init();
     let game = ConnectFour::<BitState>::new(7, 6).unwrap();
     let human_player = HumanPlayer::new();
-    let ai_player = MonteCarloPlayer::new();
+    let ai_player = TreeSearchPlayer::new(&game);
     let mut players: Vec<Box<PlayerTrait<Game=_>>> = vec![Box::new(human_player), Box::new(ai_player)];
     players.shuffle(&mut thread_rng());
 

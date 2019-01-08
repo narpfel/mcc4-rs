@@ -6,7 +6,7 @@ pub mod ai_player;
 pub mod connect_four;
 mod game;
 
-pub use crate::ai_player::MonteCarloPlayer;
+pub use crate::ai_player::{MonteCarloPlayer, TreeSearchPlayer};
 pub use crate::game::{Game, Player, Winner};
 pub use crate::connect_four::*;
 

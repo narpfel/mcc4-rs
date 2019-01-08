@@ -5,7 +5,7 @@ use super::PlayerTrait;
 
 pub trait Game: Send + Sync + Clone {
     type State: Clone;
-    type Move: FromStr + Send + fmt::Display + Copy;
+    type Move: FromStr + Send + fmt::Display + fmt::Debug + Copy + PartialEq;
     type InvalidMove: fmt::Debug;
 
     fn play(&mut self, move_: Self::Move) -> Result<Option<Player>, Self::InvalidMove>;
